@@ -213,29 +213,46 @@ int main(){
 <p>But what about <strong>metaprograming</strong>?
 In a few words <a href="https://en.wikipedia.org/wiki/Metaprogramming">metaprograming</a> - is a programming technique in which program manipulate programs, the program can read, edit, generate, analyze another program. Also, I like this definition <strong>“write code then writes code”</strong>.  If you familiar with Java, C# or any other language which have Reflection, reflection is a form metaprogramming. Also, you can write some program which generates source code, and after that, you compile this code - and you have a working program which was be created by another program.</p>
 
-<p>Aas we can see <code class="highlighter-rouge">constexpr</code> values, will be calculated at compilation time, as the case we can implement some algorithm which does no depends on input data, and evaluate them inside our program for <strong>zero</strong> time, by zero I mean constant O(1) complexity. Let’s try to implement something, simple like Fibonacci number.</p>
+<p>Aas we can see <code class="highlighter-rouge">constexpr</code> values, will be calculated at compilation time, as the case we can implement some algorithm which does no depends on input data, and evaluate them inside our program for <strong>zero</strong> time, by zero I mean constant O(1) complexity. Let’s try to implement something, simple like Fibonacci number. 
+Actually, a Fibonacci number has <a href="https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression">Closed-form expression</a> but we do not will use it.</p>
 
-<p>The sequence <code class="highlighter-rouge">F(n)</code> of fibonacci number is defined by recurrence relation:
-<code class="highlighter-rouge">F(n) = F(n-1) + F(n-2);
-F(0) = 1;F(1) = 1;
-</code>
-`
-F(0) = 1;F(1) = 1; F(2) = 1; F(3) = F(2) + F(1); F(4) = F(3) + F(2); F(n) = F(n-1) + F(n-2)
-`
-And of course, Fibonacci number has <a href="https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression">Closed-form expression</a>.
-The first thing that catches your eye is this expression has really bad complexity if we decide to use this equation without any optimization like memoization. In current expression, we compute the same functions multiple times, but we can use <code class="highlighter-rouge">cache</code> and do not compute a function with the same input arguments twice.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>auto fibonaciClosedForm(int n){
+ 	 //When we will invocate this func
+ 	 //we will compute only return statement
+ 	 //gratio,b and sqrt_5 will be computed in compilation time.
+    constexpr auto sqrt_5 = 2.2360679775;
+    constexpr auto gratio = (1 + sqrt_5)/2;
+    constexpr auto b = (1 - sqrt_5) / 2;
+    return (pow(gratio,n) - pow(b,n) ) / sqrt_5;
+}
+</code></pre>
+</div>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//F(2) = 1
+<p>The sequence <code class="highlighter-rouge">F(n)</code> of fibonacci number is defined by recurrence relation:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>F(n) = F(n-1) + F(n-2);
+F(1) = 1;
+F(2) = 1;
+F(3) = F(2) + F(1); 
+F(4) = F(3) + F(2); 
+F(n) = F(n-1) + F(n-2)
+</code></pre>
+</div>
+
+<p>The first thing that catches your eye is this expression has really bad complexity if we decide to use this equation without any optimization like memoization. In current expression, we compute the same functions multiple times, but we can use <code class="highlighter-rouge">cache</code> and do not compute a function with the same input arguments twice.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>//F(1) = 1
+//F(2) = 1
 //F(3) = F(2) + F(1)
 //F(4) = F(3) + F(2)
 //We will compute F(2) twice.
 	
 constexpr long long fibonaci_noconst(int n){
-		if(n &lt;= 1){
-				return 1;
-		}
+	if(n &lt;= 1){
+			return 1;
+	}
 
-		return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
+	return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
 }
 </code></pre>
 </div>
@@ -310,7 +327,7 @@ Actually, we can compute the complexity of Fibonacci number without caching:</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>T(n) - complexity for calculation Fibonacci for num = n
 T(1) = 1
-T(0) = 1
+T(2) = 1
 T(n) = T(n - 1) + T(n - 2) + O(1)  ; O(1) is sum operation T(n-1) + T(n-2)
 
 Θ(n) = F(n) ; Tight Bound
@@ -377,7 +394,7 @@ constexpr long long fibonaci(ll n){
     return fibonaci(n - 1) + fibonaci(n - 2);
 }
 constexpr ll fibonaci_noconst(ll n){
-    if(n &lt;= 1){
+    if(n &lt;= 2){
         return 1;
     }
 
@@ -420,8 +437,8 @@ long long _fibonaci_rec(int n, std::map&lt;int, long long&gt;&amp; cache){
 
 long long fibonaci_rec(int n){
     std::map&lt;int, long long&gt; cache = {
-            {0 , 1}, //F(0) = 1
-            {1 , 1}  //F(1) = 1
+            {1 , 1}, //F(0) = 1
+            {2 , 1}  //F(1) = 1
     };
     return _fibonaci_rec(n, cache);
 }

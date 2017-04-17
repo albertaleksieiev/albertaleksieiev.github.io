@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-16T21:12:45-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Constexpr c++{14} and metprogramming</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Constexpr c++{14} and metprogramming" /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-16T23:51:25-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Constexpr c++{14} and metprogramming</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Constexpr c++{14} and metprogramming" /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
 Let’s look both cases:&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Apply to object&lt;/strong&gt;&lt;/p&gt;
@@ -134,29 +134,46 @@ int main(){
 &lt;p&gt;But what about &lt;strong&gt;metaprograming&lt;/strong&gt;?
 In a few words &lt;a href=&quot;https://en.wikipedia.org/wiki/Metaprogramming&quot;&gt;metaprograming&lt;/a&gt; - is a programming technique in which program manipulate programs, the program can read, edit, generate, analyze another program. Also, I like this definition &lt;strong&gt;“write code then writes code”&lt;/strong&gt;.  If you familiar with Java, C# or any other language which have Reflection, reflection is a form metaprogramming. Also, you can write some program which generates source code, and after that, you compile this code - and you have a working program which was be created by another program.&lt;/p&gt;
 
-&lt;p&gt;Aas we can see &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; values, will be calculated at compilation time, as the case we can implement some algorithm which does no depends on input data, and evaluate them inside our program for &lt;strong&gt;zero&lt;/strong&gt; time, by zero I mean constant O(1) complexity. Let’s try to implement something, simple like Fibonacci number.&lt;/p&gt;
+&lt;p&gt;Aas we can see &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; values, will be calculated at compilation time, as the case we can implement some algorithm which does no depends on input data, and evaluate them inside our program for &lt;strong&gt;zero&lt;/strong&gt; time, by zero I mean constant O(1) complexity. Let’s try to implement something, simple like Fibonacci number. 
+Actually, a Fibonacci number has &lt;a href=&quot;https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression&quot;&gt;Closed-form expression&lt;/a&gt; but we do not will use it.&lt;/p&gt;
 
-&lt;p&gt;The sequence &lt;code class=&quot;highlighter-rouge&quot;&gt;F(n)&lt;/code&gt; of fibonacci number is defined by recurrence relation:
-&lt;code class=&quot;highlighter-rouge&quot;&gt;F(n) = F(n-1) + F(n-2);
-F(0) = 1;F(1) = 1;
-&lt;/code&gt;
-`
-F(0) = 1;F(1) = 1; F(2) = 1; F(3) = F(2) + F(1); F(4) = F(3) + F(2); F(n) = F(n-1) + F(n-2)
-`
-And of course, Fibonacci number has &lt;a href=&quot;https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression&quot;&gt;Closed-form expression&lt;/a&gt;.
-The first thing that catches your eye is this expression has really bad complexity if we decide to use this equation without any optimization like memoization. In current expression, we compute the same functions multiple times, but we can use &lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; and do not compute a function with the same input arguments twice.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;auto fibonaciClosedForm(int n){
+ 	 //When we will invocate this func
+ 	 //we will compute only return statement
+ 	 //gratio,b and sqrt_5 will be computed in compilation time.
+    constexpr auto sqrt_5 = 2.2360679775;
+    constexpr auto gratio = (1 + sqrt_5)/2;
+    constexpr auto b = (1 - sqrt_5) / 2;
+    return (pow(gratio,n) - pow(b,n) ) / sqrt_5;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//F(2) = 1
+&lt;p&gt;The sequence &lt;code class=&quot;highlighter-rouge&quot;&gt;F(n)&lt;/code&gt; of fibonacci number is defined by recurrence relation:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;F(n) = F(n-1) + F(n-2);
+F(1) = 1;
+F(2) = 1;
+F(3) = F(2) + F(1); 
+F(4) = F(3) + F(2); 
+F(n) = F(n-1) + F(n-2)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The first thing that catches your eye is this expression has really bad complexity if we decide to use this equation without any optimization like memoization. In current expression, we compute the same functions multiple times, but we can use &lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; and do not compute a function with the same input arguments twice.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//F(1) = 1
+//F(2) = 1
 //F(3) = F(2) + F(1)
 //F(4) = F(3) + F(2)
 //We will compute F(2) twice.
 	
 constexpr long long fibonaci_noconst(int n){
-		if(n &amp;lt;= 1){
-				return 1;
-		}
+	if(n &amp;lt;= 1){
+			return 1;
+	}
 
-		return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
+	return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
 }
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
@@ -231,7 +248,7 @@ Actually, we can compute the complexity of Fibonacci number without caching:&lt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;T(n) - complexity for calculation Fibonacci for num = n
 T(1) = 1
-T(0) = 1
+T(2) = 1
 T(n) = T(n - 1) + T(n - 2) + O(1)  ; O(1) is sum operation T(n-1) + T(n-2)
 
 Θ(n) = F(n) ; Tight Bound
@@ -298,7 +315,7 @@ constexpr long long fibonaci(ll n){
     return fibonaci(n - 1) + fibonaci(n - 2);
 }
 constexpr ll fibonaci_noconst(ll n){
-    if(n &amp;lt;= 1){
+    if(n &amp;lt;= 2){
         return 1;
     }
 
@@ -341,8 +358,8 @@ long long _fibonaci_rec(int n, std::map&amp;lt;int, long long&amp;gt;&amp;amp; c
 
 long long fibonaci_rec(int n){
     std::map&amp;lt;int, long long&amp;gt; cache = {
-            {0 , 1}, //F(0) = 1
-            {1 , 1}  //F(1) = 1
+            {1 , 1}, //F(0) = 1
+            {2 , 1}  //F(1) = 1
     };
     return _fibonaci_rec(n, cache);
 }
