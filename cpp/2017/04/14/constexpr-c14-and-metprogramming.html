@@ -275,8 +275,8 @@ long long _fibonaci_rec(int n, std::map&lt;int, long long&gt;&amp; cache){
 
 long long fibonaci_rec(int n){
     std::map&lt;int, long long&gt; cache = {
-            {0 , 1}, //F(0) = 1
-            {1 , 1}  //F(1) = 1
+            {1 , 1}, //F(1) = 1
+            {2 , 1}  //F(2) = 1
     };
     return _fibonaci_rec(n, cache);
 }
