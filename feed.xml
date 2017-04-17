@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-16T21:12:45-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Constexpr c++{14} and metprogramming</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Constexpr c++{14} and metprogramming" /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
+Let’s look both cases:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Apply to object&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;constexpr auto size = 10;
+std::array&amp;lt;float, size&amp;gt; arr;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Your object will be assigned by constant calculated expression in a &lt;strong&gt;compile time&lt;/strong&gt;. It’s mean your variable size is just regular C++98 &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;, and you can use this variable for like initialization static arrays.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Apply to function&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;constexpr auto DEBUG_VERSION = false; //constexpr object
+constexpr auto calculateArrayLength() //C++14
+{
+		if(DEBUG_VERSION){
+				return 20 * 30 - 70 * 10;
+		}else{
+				return 10;
+		}
+}
+constexpr auto calculateArrayLength() //C++11
+{
+		//C++ doesnt support any other expressions inside constexpr function
+		return DEBUG_VERSION? 20 * 30 - 70 * 10: 10;
+}
+...
+constexpr auto stack_size = calculateArrayLength();
+const std::array&amp;lt;float,stack_size&amp;gt; stack_area;
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;As we can see - &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; indicate which function evaluation result can be calculated in compilation time. But using &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt; + class function means we dont change any member variable of the class, as we can see below.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class String{
+    using str_container = std::vector&amp;lt;char&amp;gt;;
+private:
+    str_container data;
+public:
+    String(){}
+    String(std::string data){
+
+        this-&amp;gt;data.resize(data.length() + 1);
+        std::copy(data.c_str(), data.c_str() + data.length() + 1, this-&amp;gt;data.begin());
+        this-&amp;gt;data.resize(data.length());//remove '\0' last character
+    }
+    String(const str_container&amp;amp; data):data(data){}
+
+    String operator+(const String&amp;amp; rhs) const{ //We use imutable string way, so we do not change internal state (we add keyword const at end of function)
+        str_container data_container(this-&amp;gt;data.size() + rhs.data.size() + 1);
+        std::copy(this-&amp;gt;data.begin(),this-&amp;gt;data.end(), data_container.begin());
+        std::copy(rhs.data.begin(), rhs.data.end(), data_container.begin() + this-&amp;gt;data.size());
+        data_container.resize(data_container.size() - 1);//Resize
+        return String(data_container);
+    }
+};
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;As we can see &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; always &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;, but &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt; not always &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;constexpr Class functions&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Yes, we can create constexpr class instances.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;array&amp;gt;
+#include &amp;lt;iostream&amp;gt;
+//1x2 Matrix
+template &amp;lt;typename DataType&amp;gt;
+class Vector2 {
+public:
+public:
+    constexpr Vector2(){
+    }
+    constexpr Vector2(DataType x, DataType y):x(x), y(y){
+    }
+
+    DataType x;
+    DataType y;
+};
+
+#define Vector2f Vector2&amp;lt;float&amp;gt;
+using Vector2d = Vector2&amp;lt;double&amp;gt;; //Walk away old C++98 define!
+using Vector2i = Vector2&amp;lt;int&amp;gt;;
+using Vector2l = Vector2&amp;lt;long&amp;gt;;
+
+//1x3 Matrix
+template &amp;lt;typename DataType&amp;gt;
+class Vector3: public Vector2&amp;lt;DataType&amp;gt;{
+public:
+    DataType z;
+    constexpr Vector3(){
+
+    }
+    constexpr Vector3(DataType x, DataType y, DataType z): Vector2&amp;lt;DataType&amp;gt;(x,y), z(z){
+
+    }
+		// 3 keywords which containt 'const' keyword inside, hah
+    constexpr auto operator+(const Vector3&amp;lt;DataType&amp;gt;&amp;amp; rhs) const{    
+        return Vector3&amp;lt;DataType&amp;gt;(this-&amp;gt;x + rhs.x, this-&amp;gt;y + rhs.y, this-&amp;gt;z + rhs.z);
+    }
+    constexpr auto max() const{
+        return std::max(std::max(this-&amp;gt;x,this-&amp;gt;y), this-&amp;gt;z);
+    }
+};
+using Vector3f = Vector3&amp;lt;float&amp;gt;;
+using Vector3d = Vector3&amp;lt;double&amp;gt;;
+using Vector3i = Vector3&amp;lt;int&amp;gt;;
+using Vector3l = Vector3&amp;lt;long&amp;gt;;
+
+int main(){
+    constexpr Vector3i v(10,20,30);
+
+    constexpr Vector3i v1(20,30,40);
+    constexpr auto v3 = v + v1;
+
+    const std::array&amp;lt;int, v3.max()&amp;gt; arr = {};// array size = 70
+    std::cout&amp;lt;&amp;lt;arr.size()&amp;lt;&amp;lt;std::endl;  //Will print out 70
+
+    return EXIT_SUCCESS;
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Generating &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; Vector3i class instances, calculating the sum of 2 vectors and pass the max value in array initialization as the array size. At function operator+ we can see 3 &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt; keywords, first one indicate &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; return value from a function, the second one - mean we send constant object inside the function and last one - mean this function do not change the internal state of the class. Also you can &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; functions as regular functions, like &lt;code class=&quot;highlighter-rouge&quot;&gt;auto vec = Vector3i(0,0,0);&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Summary&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be applied to variables, and functions. When you apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to the variable you indicate - this variable will be assigned by a constant expression. In another hand when we apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function - we indicate this function &lt;strong&gt;can be&lt;/strong&gt; used as a constant expression.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;But what about &lt;strong&gt;metaprograming&lt;/strong&gt;?
+In a few words &lt;a href=&quot;https://en.wikipedia.org/wiki/Metaprogramming&quot;&gt;metaprograming&lt;/a&gt; - is a programming technique in which program manipulate programs, the program can read, edit, generate, analyze another program. Also, I like this definition &lt;strong&gt;“write code then writes code”&lt;/strong&gt;.  If you familiar with Java, C# or any other language which have Reflection, reflection is a form metaprogramming. Also, you can write some program which generates source code, and after that, you compile this code - and you have a working program which was be created by another program.&lt;/p&gt;
+
+&lt;p&gt;Aas we can see &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; values, will be calculated at compilation time, as the case we can implement some algorithm which does no depends on input data, and evaluate them inside our program for &lt;strong&gt;zero&lt;/strong&gt; time, by zero I mean constant O(1) complexity. Let’s try to implement something, simple like Fibonacci number.&lt;/p&gt;
+
+&lt;p&gt;The sequence &lt;code class=&quot;highlighter-rouge&quot;&gt;F(n)&lt;/code&gt; of fibonacci number is defined by recurrence relation:
+&lt;code class=&quot;highlighter-rouge&quot;&gt;F(n) = F(n-1) + F(n-2);
+F(0) = 1;F(1) = 1;
+&lt;/code&gt;
+`
+F(0) = 1;F(1) = 1; F(2) = 1; F(3) = F(2) + F(1); F(4) = F(3) + F(2); F(n) = F(n-1) + F(n-2)
+`
+And of course, Fibonacci number has &lt;a href=&quot;https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression&quot;&gt;Closed-form expression&lt;/a&gt;.
+The first thing that catches your eye is this expression has really bad complexity if we decide to use this equation without any optimization like memoization. In current expression, we compute the same functions multiple times, but we can use &lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; and do not compute a function with the same input arguments twice.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//F(2) = 1
+//F(3) = F(2) + F(1)
+//F(4) = F(3) + F(2)
+//We will compute F(2) twice.
+	
+constexpr long long fibonaci_noconst(int n){
+		if(n &amp;lt;= 1){
+				return 1;
+		}
+
+		return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;But if we will use caching this problem will be gone, we store cache in a &lt;code class=&quot;highlighter-rouge&quot;&gt;std::map&amp;lt;int, long  long&amp;gt;&lt;/code&gt;, where  key is function argument and value is function return value (actually we need to store only 2 previous function invocation results but in current case we store all results).&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;map&amp;gt;
+long long _fibonaci_rec(int n, std::map&amp;lt;int, long long&amp;gt;&amp;amp; cache){
+    auto cached_value = cache.find(n);
+    if(cached_value != cache.end()){
+        return cached_value-&amp;gt;second;//Return cached value
+    }
+
+    auto v1 = _fibonaci_rec(n - 1, cache);
+    auto v2 = _fibonaci_rec(n - 2, cache);
+
+    cache[n] = v1 + v2; //store in cache
+    return v1 + v2;
+}
+
+long long fibonaci_rec(int n){
+    std::map&amp;lt;int, long long&amp;gt; cache = {
+            {0 , 1}, //F(0) = 1
+            {1 , 1}  //F(1) = 1
+    };
+    return _fibonaci_rec(n, cache);
+}
+int main(){
+    cout&amp;lt;&amp;lt;fibonaci_rec(5); // 8
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt; current realization can be easily converted into 1 for-loop, but in the current case, we use this approach, which simplifies understanding of memoization.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt;  fibonacci number calculation&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;constexpr long long fibonaci(int n){
+    if(n &amp;lt;= 1){
+        return 1;
+    }
+
+    return fibonaci(n - 1) + fibonaci(n - 2);
+}
+...
+constexpr auto res = fibonaci(5); //res = 8
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;This code will be compiled with no problem, and the result of evaluation will be evaluated with zero time. But what about calculation Fibonacci number, where &lt;code class=&quot;highlighter-rouge&quot;&gt;n&lt;/code&gt; is a big number like 40? Actually 40 is not a big number, but result of Fibonaci function with n = 40 will be 165580141.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;constexpr auto res = fibonaci(40); //Do not compiled
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I do not really know, maybe this code will be compiled by your compiler, but I have reasonable problems why this code does not compile, let’s look what compiler says:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1  error: constexpr variable 'res1' must be initialized by a constant expression
+      constexpr ll res1 = fibonaci(40);
+                   ^      ~~~~~~~~~~~~
+2  note: constexpr evaluation hit maximum step limit; possible infinite loop?
+    return fibonaci(n - 1) + fibonaci(n - 2);
+3  note: in call to 'fibonaci(3)'
+4  note: in call to 'fibonaci(4)'
+5  note: in call to 'fibonaci(5)'
+...
+6  note: in call to 'fibonaci(40)'
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;At second line our compiler, says that we hit maximum step limit, it seems our compiler do not cache result of evaluation previous function :( 
+Actually, we can compute the complexity of Fibonacci number without caching:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;T(n) - complexity for calculation Fibonacci for num = n
+T(1) = 1
+T(0) = 1
+T(n) = T(n - 1) + T(n - 2) + O(1)  ; O(1) is sum operation T(n-1) + T(n-2)
+
+Θ(n) = F(n) ; Tight Bound
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Calculating Fibonacci number without any modification has O(2 ^ n) complexity, cause we have a tree with depth = n, and a total number of nodes is 2 ^ n, &lt;strong&gt;its upper bound&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;But what about our compilation issues? We need compile with flag &lt;code class=&quot;highlighter-rouge&quot;&gt;-fconstexpr-steps=NUM&lt;/code&gt;, where a num is a number of maximum steps limit. I use &lt;strong&gt;clang-802.0.41&lt;/strong&gt;, now we can test our Fibonacci complexity. Let’s compute Fibonacci numb for example for num = 10, and set flags  &lt;code class=&quot;highlighter-rouge&quot;&gt;-fconstexpr-steps&lt;/code&gt; between 2^n and some number lower than 2^n. If program compiled with 2^n and do not compile with a number lower than 2^n, our complexity will be valid.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-fconstexpr-steps=1024, n = 10 =&amp;gt;  success compilation
+-fconstexpr-steps=600, n = 10 =&amp;gt;  fail compilation
+
+-fconstexpr-steps=512, n = 9 =&amp;gt;  success compilation
+-fconstexpr-steps=256, n = 9 =&amp;gt;  fail compilation
+
+-fconstexpr-steps=512, n = 9 =&amp;gt;  success compilation
+-fconstexpr-steps=256, n = 9 =&amp;gt;  fail compilation
+
+-fconstexpr-steps=32768, n = 15 =&amp;gt;  success compilation
+-fconstexpr-steps=6500, n = 15 =&amp;gt;  fail compilation
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Yes, my clang compiler does not memoize &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; function invocation! 
+But &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; is not only one way to calculate values in precompiled time, we can use c++ template way.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;template &amp;lt;long long N&amp;gt;
+struct Fibonaci{
+    enum{value = (Fibonaci&amp;lt;N-1&amp;gt;::value + Fibonaci&amp;lt;N-2&amp;gt;::value)};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;0&amp;gt;{
+    enum {value = 1};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;1&amp;gt;{
+    enum {value = 1};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;2&amp;gt;{
+    enum {value = 1};
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This way will be compiled more faster, but by default recursive template instantiation maximum depth = 1024, if you want increase maximum depth add flag &lt;code class=&quot;highlighter-rouge&quot;&gt;-ftemplate-depth=N&lt;/code&gt;. In our case it’s not nessasery, cause calculation Fibonacci number for N&amp;gt;=1024 is really hard task.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Calculation time&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;cmath&amp;gt;
+#include &amp;lt;ctime&amp;gt;
+#include &amp;lt;vector&amp;gt;
+#include &amp;lt;chrono&amp;gt;
+using namespace std;
+using ll = long long;
+
+constexpr long long fibonaci(ll n){
+    if(n &amp;lt;= 1){
+        return 1;
+    }
+
+    return fibonaci(n - 1) + fibonaci(n - 2);
+}
+constexpr ll fibonaci_noconst(ll n){
+    if(n &amp;lt;= 1){
+        return 1;
+    }
+
+    return fibonaci_noconst(n - 1) + fibonaci_noconst(n - 2);
+}
+
+
+template &amp;lt;ll N&amp;gt;
+struct Fibonaci{
+    enum{value = (Fibonaci&amp;lt;N-1&amp;gt;::value + Fibonaci&amp;lt;N-2&amp;gt;::value)};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;0&amp;gt;{
+    enum {value = 1};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;1&amp;gt;{
+    enum {value = 1};
+};
+template &amp;lt;&amp;gt;
+struct Fibonaci&amp;lt;2&amp;gt;{
+    enum {value = 1};
+};
+
+
+using namespace std;
+#include &amp;lt;map&amp;gt;
+long long _fibonaci_rec(int n, std::map&amp;lt;int, long long&amp;gt;&amp;amp; cache){
+    auto cached_value = cache.find(n);
+    if(cached_value != cache.end()){
+        return cached_value-&amp;gt;second;//Return cached value
+    }
+
+    auto v1 = _fibonaci_rec(n - 1, cache);
+    auto v2 = _fibonaci_rec(n - 2, cache);
+
+    cache[n] = v1 + v2; //store in cache
+    return v1 + v2;
+}
+
+long long fibonaci_rec(int n){
+    std::map&amp;lt;int, long long&amp;gt; cache = {
+            {0 , 1}, //F(0) = 1
+            {1 , 1}  //F(1) = 1
+    };
+    return _fibonaci_rec(n, cache);
+}
+
+auto start = std::chrono::system_clock::now();
+void startMeasurment(){
+    start = std::chrono::system_clock::now();
+}
+void endMeasurmentTimeAndPrint(std::string method, int n){
+    auto end = std::chrono::system_clock::now();
+    auto elapsed =
+            std::chrono::duration_cast&amp;lt;std::chrono::milliseconds&amp;gt;(end - start);
+    std::cout&amp;lt;&amp;lt; method&amp;lt;&amp;lt;&quot; for num = &quot;&amp;lt;&amp;lt;n&amp;lt;&amp;lt;&quot;, total computation time: &quot;&amp;lt;&amp;lt; elapsed.count() &amp;lt;&amp;lt;&quot;ms&quot;&amp;lt;&amp;lt;endl;
+}
+int main(){
+    constexpr ll num = 40;
+
+    startMeasurment();
+    constexpr auto f = fibonaci(num);
+    endMeasurmentTimeAndPrint(&quot;Constexpr Fibonacci&quot;,num);
+
+    startMeasurment();
+    auto f1 = fibonaci_noconst(num);
+    endMeasurmentTimeAndPrint(&quot;General Fibonacci&quot;,num);
+
+    startMeasurment();
+    auto f2 = Fibonaci&amp;lt;num&amp;gt;::value;
+    endMeasurmentTimeAndPrint(&quot;Template Fibonacci&quot;,num);
+
+    startMeasurment();
+    auto f3 = fibonaci_rec(num);
+    endMeasurmentTimeAndPrint(&quot;General Fibonacci with map cache&quot;,num);
+}
+//Compile with flag -fconstexpr-steps=1099162776
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;Measure time computation for defferent type of calculation fibonaci num&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;On my MacBookPro 15 with 2.5 GHz Intel Core i7, it tooks 15minute for &lt;strong&gt;COMPILATION&lt;/strong&gt;. You can see results of evaluation bellow.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Constexpr Fibonacci for num = 40, total computation time: 0ms
+General Fibonacci for num = 40, total computation time: 1580ms
+Template Fibonacci for num = 40, total computation time: 0ms
+General Fibonacci with map cache for num = 40, total computation time: 0ms
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between constexpr and regular const? constexpr can be used in 2 cases - apply constexpr to object and apply constexpr to function. Let’s look both cases:</summary></entry></feed>
