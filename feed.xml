@@ -1,4 +1,466 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-18T23:12:15-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00-04:00</published><updated>2017-04-18T00:00:00-04:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-26T22:04:01-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)</title><link href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html" rel="alternate" type="text/html" title="Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)" /><published>2017-04-26T00:00:00-04:00</published><updated>2017-04-26T00:00:00-04:00</updated><id>/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor</id><content type="html" xml:base="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">&lt;p&gt;##Initializer_list
+C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list&lt;T&gt;](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.&lt;/T&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//arr is std::initializer_list&amp;lt;int&amp;gt;
+auto arr = {1,2,3,4,5};
+for(auto&amp;amp; elem: arr){
+	std::cout&amp;lt;&amp;lt;elem&amp;lt;&amp;lt;' '; //will print 1 2 3 4 5
+}
+//OR
+for(auto&amp;amp; val: {1,3,5,7,11}){
+	std::cout&amp;lt;&amp;lt;val&amp;lt;&amp;lt;' '; //will print 1 3 5 7 11
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Wow, it’s really easy! By default, if you write auto with &lt;em&gt;braced-init-list(&lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;&lt;/code&gt;)&lt;/em&gt; as we can see in the code above, you create a std::initializer_list&lt;T&gt; instance. But c++{11} went further and add this feature to [list-initialization](http://en.cppreference.com/w/cpp/language/list_initialization) like function call, and assignment expression when argument is `std::initializer_list&lt;T&gt;`. But my favorite feature is using std::initializer_list&lt;T&gt; with constructors, this will make it possible to do something like this:&lt;/T&gt;&lt;/T&gt;&lt;/T&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;std::vector&amp;lt;int&amp;gt; vec {1,2,3,4,5,6,7}; //constructor
+std::vector&amp;lt;int&amp;gt; vec_1 = {1,2,3,4,5,6,7}; //assigment
+auto vec_2 = vector&amp;lt;int&amp;gt;{1,2,3,4,5,6}; //constructor
+auto vec_3 = vector&amp;lt;int&amp;gt;({1,2,3,4,5,6}); //constructor
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;All of this 4 vectors will contain the same values, and it’s really easy to initialize objects in this way. By default, if you declare &lt;code class=&quot;highlighter-rouge&quot;&gt;std::initializer_list&amp;lt;T&amp;gt;&lt;/code&gt; in your function or constructor as an input argument, compiler prefer this function instead of an overloaded function with the same types and numbers of arguments.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; vec (10,20); //10 elements, each is 20 
+vector&amp;lt;int&amp;gt; vec {10,20}; //2 elements, 10 and 20
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;As we can see above, when we use &lt;em&gt;braced-init-list&lt;/em&gt; compiler prefer call &lt;code class=&quot;highlighter-rouge&quot;&gt;std::vector(std::initializer_list&amp;lt;T&amp;gt;)&lt;/code&gt; constructor instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;std::vector(int _a, int _n)&lt;/code&gt;. Let’s try create our own structure!&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;template &amp;lt;typename T&amp;gt;
+class Container{
+private:
+    std::vector&amp;lt;T&amp;gt; vec;
+public:
+    /**
+     * Create Container from initializer_list
+     * @param list initializer_list
+     */
+    Container(const std::initializer_list&amp;lt;T&amp;gt;&amp;amp; list){
+        this-&amp;gt;append(list);
+    }
+    /**
+     * Create Container with default constructed n elements
+     * @param size The number of elements to initially create.
+     * @param default_value Default value every element
+     */
+    Container(size_t size, T default_value){
+        vec = std::vector&amp;lt;T&amp;gt;(size, default_value);
+    }
+    /**
+     * Append list to end of container
+     * @param list appending list 
+     * @return pointer to current container
+     */
+    Container&amp;amp; append(const std::initializer_list&amp;lt;T&amp;gt;&amp;amp; list){
+        this-&amp;gt;vec.insert(this-&amp;gt;vec.end(), list.begin(), list.end());
+        return *this;
+    }
+    /**
+     * Get element by index
+     * @param index index of element
+     * @return reference to element
+     */
+    T&amp;amp;operator[](const int&amp;amp; index){
+        //TODO add bounding checks
+        return this-&amp;gt;vec[abs(index) % this-&amp;gt;vec.size()]; //cycle
+    }
+};
+
+...
+
+Container&amp;lt;int&amp;gt; container (10,555);
+container.append({5,6,7,8});
+for(auto i = 0;i &amp;lt; container.size();i++){
+    std::cout&amp;lt;&amp;lt;container[i]&amp;lt;&amp;lt;' ';
+}
+std::cout&amp;lt;&amp;lt;std::endl;
+//will print: 555 555 555 555 555 555 555 555 555 555 5 6 7 8 
+
+Container&amp;lt;int&amp;gt; container_1 {10,555};
+container_1.append({5,6,7,8});
+for(auto i = 0;i &amp;lt; container_1.size();i++){
+    std::cout&amp;lt;&amp;lt;container_1[i]&amp;lt;&amp;lt;' ';
+}
+//will print 10 555 5 6 7 8
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;move-constructor&quot;&gt;Move constructor&lt;/h2&gt;
+
+&lt;p&gt;If you define class or structure in C++{98} compiller generate 4 member function for you :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Default constructor&lt;/li&gt;
+  &lt;li&gt;Desctructor&lt;/li&gt;
+  &lt;li&gt;Copy constructor (deleted if class contains move operations)&lt;/li&gt;
+  &lt;li&gt;Copy assigment operator (deleted if class contains move operations)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In new c++{11} you will have new one special member functions :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://en.cppreference.com/w/cpp/language/move_constructor&quot;&gt;Move constructor&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://en.cppreference.com/w/cpp/language/move_assignment&quot;&gt;Move assigment operator&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These members will be generated if the class contains no user-declared copy operation, destructor or move operations. Each of this function performs memberwise moving of non-static data members.&lt;/p&gt;
+
+&lt;p&gt;Let’s take a look at default move constructor:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Person {
+public:
+    std::string name;
+    //First copy constructor
+    Person(const std::string&amp;amp; name):name(name){
+    }
+    Person(Person&amp;amp;&amp;amp; person) = delete; //delete move constructor
+};
+class Glass{
+public:
+    std::string name;
+    //First copy constructor
+    Glass(std::string&amp;amp;&amp;amp; name):name(std::move(name)){
+
+    }
+    //Second move constructor
+    Glass(const std::string&amp;amp; name):name(name){
+
+    }
+};
+
+...
+
+Person person {&quot;Alfred&quot;}; // call first constructor
+Glass red_glass {&quot;brow-blue&quot;}; //call second constuctor
+
+auto newone_red_glass = std::move(red_glass); //call second contructor
+//auto new_person = std::move(person); // do not compile cause we delete move constructor
+
+std::cout&amp;lt;&amp;lt;&quot;Red glass name : &quot; &amp;lt;&amp;lt; red_glass.name&amp;lt;&amp;lt; std::endl;  
+//will print `Red glass name :`
+    
+std::cout&amp;lt;&amp;lt;&quot;New one Red glass name : &quot; &amp;lt;&amp;lt; newone_red_glass.name&amp;lt;&amp;lt; std::endl; 
+//will print `New one Red glass name : brow-blue`
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;As we can see after move operation old value will be moved to new one, in some cases, it’s better than create a copy (like reallocation memory in std::vector c++{11}) cause it’s faster than create a copy.&lt;/p&gt;
+
+&lt;h2 id=&quot;variadic-template&quot;&gt;Variadic template&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://en.cppreference.com/w/cpp/language/parameter_pack&quot;&gt;Variadic template&lt;/a&gt; - are a template that takes a variable number of templates. It’s made possible pass different number arguments with different types to function (kind of &lt;a href=&quot;http://en.cppreference.com/w/cpp/language/parameter_pack&quot;&gt;varargs&lt;/a&gt; in java). This feature can be used if you want to implement custom &lt;code class=&quot;highlighter-rouge&quot;&gt;printf&lt;/code&gt; function, which retrieves a different number of arguments with different types. Also, all logic will be resolved on &lt;strong&gt;compile-time&lt;/strong&gt;!&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//1 argument
+template &amp;lt;typename T&amp;gt;
+T sum(T value){   
+    return value;
+}
+// Different number of arguments
+template &amp;lt;typename T, typename ...Args&amp;gt;
+T sum(T value, Args... rest){
+    return value + sum(rest...);
+};
+
+...
+
+std::cout&amp;lt;&amp;lt;sum(1.1f,2,3,6.0f,0.75); 
+//will print: 12.1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This &lt;code class=&quot;highlighter-rouge&quot;&gt;sum&lt;/code&gt; function, calculate sum of input arguments, by recursion. First function &lt;code class=&quot;highlighter-rouge&quot;&gt;sum&lt;/code&gt; will be called if number of arguments = 1, but if number of arguments will be more than 2, the second function will be called. As you can see we pass the first argument as type float, but second is int. And the output will be cast to type float, cause it’s frirt argument. Let’s try test it :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;limits&amp;gt;  //for std::cout.precision
+#include &amp;lt;typeinfo&amp;gt; //typeid(t).name
+
+...
+std::cout.precision(std::numeric_limits&amp;lt; double &amp;gt;::max_digits10);
+
+auto sum_int = sum(2, 1.1f,2,3,6.0f,0.75, static_cast&amp;lt;double &amp;gt;(5.0 + 1e-12));
+std::cout&amp;lt;&amp;lt;&quot;Sum; var sum_int: &quot;&amp;lt;&amp;lt;sum_int&amp;lt;&amp;lt;std::endl;
+std::cout&amp;lt;&amp;lt;&quot;Type of sum_int: &quot;&amp;lt;&amp;lt; typeid(sum_int).name()&amp;lt;&amp;lt;std::endl;
+
+auto sum_float = sum(2.0f, 1.1f,2,3,6.0f,0.75, static_cast&amp;lt;double &amp;gt;(5.0 + 1e-12));
+std::cout&amp;lt;&amp;lt;&quot;Sum; var sum_float: &quot;&amp;lt;&amp;lt;sum_float&amp;lt;&amp;lt;std::endl;
+std::cout&amp;lt;&amp;lt;&quot;Type of sum_float: &quot;&amp;lt;&amp;lt; typeid(sum_float).name()&amp;lt;&amp;lt;std::endl;
+
+auto sum_double = sum(static_cast&amp;lt;double &amp;gt;(5.0 + 1e-12),2, 1.1f,2,3,6.0f,0.75);
+std::cout&amp;lt;&amp;lt;&quot;Sum; var sum_double: &quot;&amp;lt;&amp;lt;sum_double&amp;lt;&amp;lt;std::endl;
+std::cout&amp;lt;&amp;lt;&quot;Type of sum_double: &quot;&amp;lt;&amp;lt; typeid(sum_double).name()&amp;lt;&amp;lt;std::endl;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Ouput:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Sum; var sum_int: 19
+Type of sum_int: i
+Sum; var sum_float: 19.100000381469727
+Type of sum_float: f
+Sum; var sum_double: 19.000000000001002
+Type of sum_double: d
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Yes, we was be correct, output result will be casted to first value!&lt;/p&gt;
+
+&lt;p&gt;Also we can define constructor with variadic templates, and create something cool! Like this :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Pzo5Aaz.png&quot; alt=&quot;Value and sum derived from value_base&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;VALUE_BASE is a just interface, VALUE and SUM override from them. So VALUE and SUM have function &lt;code class=&quot;highlighter-rouge&quot;&gt;getVal&lt;/code&gt;. Now we can easily build hierarchic expression evaluator, actually, I am not sure about this title.&lt;/p&gt;
+
+&lt;p&gt;Code:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;vector&amp;gt;
+#include &amp;lt;memory&amp;gt;
+#include &amp;lt;numeric&amp;gt;
+using namespace std;
+
+/*
+ * Everything has value, base class for those classes who are so good at
+ */
+class VALUE_BASE{
+public:
+    /**
+     * Get value
+     * @return int value
+     */
+    virtual int getVal() = 0;
+    virtual ~VALUE_BASE() = default;
+
+    operator int(){
+        return this-&amp;gt;getVal();
+    }
+};
+
+
+/**
+ * We check if type U is base of VALUE_BASE
+ * @tparam U type which will be checked.
+ */
+template &amp;lt;typename U&amp;gt;
+void is_base_of_valuebase_assert(){
+    static_assert(std::is_base_of&amp;lt;VALUE_BASE, U&amp;gt;::value, &quot;Type is not instance of VALUE_BASE&quot;);
+}
+/**
+ * We if type U and V is base of VALUE_BASE
+ * @tparam U type which will be checked.
+ * @tparam V type which will be checked.
+ */
+template &amp;lt;typename U, typename V&amp;gt;
+void is_base_of_valuebase_assert(){
+    static_assert(std::is_base_of&amp;lt;VALUE_BASE, U&amp;gt;::value, &quot;The first argument must be a base class of VALUE_BASE&quot;);
+    static_assert(std::is_base_of&amp;lt;VALUE_BASE, V&amp;gt;::value, &quot;Second argument must be a base class of VALUE_BASE&quot;);
+}
+/**
+ * VALUE - class which derived, contain value, and implement function getVal
+ */
+class VALUE:public VALUE_BASE{
+int value;
+public:
+    /**
+     * Get stored value
+     * @return current value
+     */
+    virtual int getVal() override {
+        return this-&amp;gt;value;
+    }
+
+
+    virtual ~VALUE() override {
+        std::cout&amp;lt;&amp;lt;&quot;destroying VALUE object, which contains :&quot;
+                 &amp;lt;&amp;lt;this-&amp;gt;getVal()&amp;lt;&amp;lt;&quot; as value.&quot;&amp;lt;&amp;lt;std::endl;;
+    }
+
+    /*
+     * We delete this class couse we useonly moving operations!
+     */
+    VALUE(const VALUE &amp;amp;vval) = delete;
+
+    /*
+     * Default move and move assigment contructors
+     */
+    VALUE(VALUE&amp;amp;&amp;amp; v ) {
+        this-&amp;gt;value = std::move(v.value);
+        v.value = -1;//we cannot destroy passed object, so set it into -1
+        std::cout&amp;lt;&amp;lt;&quot;moving VALUE object, which contains :&quot;
+                 &amp;lt;&amp;lt;this-&amp;gt;getVal()&amp;lt;&amp;lt;&quot; as value&quot; &amp;lt;&amp;lt;std::endl;
+    }
+    VALUE&amp;amp;operator =(VALUE&amp;amp;&amp;amp;) = default;
+    /*
+     * store passed int value
+     */
+    VALUE(const int &amp;amp; val){
+        this-&amp;gt;value = val;
+        std::cout&amp;lt;&amp;lt;&quot;creating VALUE object, which contains :&quot;
+                 &amp;lt;&amp;lt;this-&amp;gt;getVal()&amp;lt;&amp;lt;&quot; as value.&quot;&amp;lt;&amp;lt;std::endl;;
+
+    }
+};
+
+/*
+ * Calculate sum of objects
+ * Store multiple references , which direct to classes whose implement getVal function
+ */
+
+class SUM: public VALUE_BASE{
+private:
+
+    template &amp;lt;typename T_VALUE&amp;gt;
+    void init(T_VALUE&amp;amp;&amp;amp; value){
+        is_base_of_valuebase_assert&amp;lt;T_VALUE&amp;gt;();
+
+        this-&amp;gt;sum_arguments.push_back(std::make_shared&amp;lt;T_VALUE&amp;gt;(std::move(value)));
+    }
+    template &amp;lt;typename T_VALUE, typename... Args&amp;gt;
+    void init(T_VALUE&amp;amp;&amp;amp; value, Args&amp;amp;&amp;amp;... rest){
+        is_base_of_valuebase_assert&amp;lt;T_VALUE&amp;gt;();
+        this-&amp;gt;sum_arguments.push_back(std::make_shared&amp;lt;T_VALUE&amp;gt;(std::move(value)));
+        init(std::move(rest)...);
+    };
+public:
+    std::vector&amp;lt; std::shared_ptr&amp;lt;VALUE_BASE&amp;gt; &amp;gt; sum_arguments;
+
+    void log(std::string operation){
+        std::cout &amp;lt;&amp;lt; operation&amp;lt;&amp;lt;&quot; SUM object, which contains :&quot;;
+
+        int value_counter = 0;
+        for(auto&amp;amp; v: this-&amp;gt;sum_arguments){
+            std::cout&amp;lt;&amp;lt;(v == nullptr? &quot;nullptr&quot;: std::to_string(v-&amp;gt;getVal())) &amp;lt;&amp;lt; &quot; as &quot;&amp;lt;&amp;lt; std::to_string(++value_counter) &amp;lt;&amp;lt;&quot; value, &quot;;
+        }
+       std::cout&amp;lt;&amp;lt; std::endl;
+    }
+
+    virtual ~SUM(){
+            log(&quot;destroying&quot;);
+    }
+
+    /**
+     * Move data from data which was be passes as rvalue, to our std::vector of refferences.
+     * @tparam T_VALUE1 should be derived from VALUE_BASE
+     * @param value1 value which will be used as arguments for sum
+     */
+    template &amp;lt;typename T_VALUE1&amp;gt;
+    SUM(T_VALUE1&amp;amp;&amp;amp; value){
+        is_base_of_valuebase_assert&amp;lt;T_VALUE1&amp;gt;();
+        this-&amp;gt;init(std::move(value));
+
+        this-&amp;gt;log(&quot;creating&quot;);
+    };
+
+    template &amp;lt;typename T_VALUE, typename... Args&amp;gt;
+    SUM(T_VALUE&amp;amp;&amp;amp; value, Args&amp;amp;&amp;amp;... rest){
+        this-&amp;gt;init(std::move(value), rest...);
+
+        this-&amp;gt;log(&quot;creating&quot;);
+    };
+
+    SUM(const SUM&amp;amp;) = delete;
+
+    SUM(SUM&amp;amp;&amp;amp; sum){
+        //Shared ptr = works like std::move
+        this-&amp;gt;sum_arguments = std::move(sum.sum_arguments);
+
+        this-&amp;gt;log(&quot;moving&quot;);
+
+    }
+
+    /**
+     * Calculate sum
+     * @return sum
+     */
+    virtual int getVal() override {
+        return std::accumulate(this-&amp;gt;sum_arguments.begin(), this-&amp;gt;sum_arguments.end(), 0,
+        [](const int&amp;amp;a, auto&amp;amp; value){
+            return a + value-&amp;gt;getVal();
+        });
+        
+    }
+
+};
+
+int main(){
+    //Wow we can make something like this!
+    auto sum = SUM{
+            VALUE{10}, //First argument derived from VALUE_BASE
+            SUM{       //SUM also derived from VALUE_BASE
+                    VALUE{5},
+                    VALUE{11}
+            }
+    };
+    std::cout&amp;lt;&amp;lt;&quot;SUM = &quot;&amp;lt;&amp;lt;sum.getVal()&amp;lt;&amp;lt;std::endl; //will be printed 26
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Will be printed:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1. creating VALUE object, which contains :10 as value.
+2. creating VALUE object, which contains :5 as value.
+3. creating VALUE object, which contains :11 as value.
+4. moving VALUE object, which contains :5 as value
+5. moving VALUE object, which contains :11 as value
+6. creating SUM object, which contains :5 as 1 value, 11 as 2 value, 
+7. moving VALUE object, which contains :10 as value
+8. moving SUM object, which contains :5 as 1 value, 11 as 2 value, 
+9. creating SUM object, which contains :10 as 1 value, 16 as 2 value, 
+10. destroying SUM object, which contains :
+11. destroying VALUE object, which contains :-1 as value.
+12. destroying VALUE object, which contains :-1 as value.
+13. destroying VALUE object, which contains :-1 as value.
+14. SUM = 26
+15. destroying SUM object, which contains :10 as 1 value, 16 as 2 value, 
+16. destroying VALUE object, which contains :10 as value.
+17. destroying SUM object, which contains :5 as 1 value, 11 as 2 value, 
+18. destroying VALUE object, which contains :5 as value.
+19. destroying VALUE object, which contains :11 as value.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Let’s take a look at the output, firstly we creating a VALUE leafs (lines 1-3). Moving leafs 5 and 11 into SUM object (4-6). Moving value and SUM object into the second sum(main sum) lines 7 - 10. After we see how all variables which were &lt;a href=&quot;http://thbecker.net/articles/rvalue_references/section_01.html&quot;&gt;rhs&lt;/a&gt; are destroyed(10-13). Get result at line 14. And after that will be destroyed all object &lt;code class=&quot;highlighter-rouge&quot;&gt;sum&lt;/code&gt; in the main function, cause function is destroyed.&lt;/p&gt;
+
+&lt;p&gt;But we can create a cool concept language which will look like this:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;auto Fib = FUNC{
+	NAME{
+			&quot;fibonaci&quot;
+	},
+	ARGS{
+			ARG&amp;lt;int&amp;gt;(&quot;first&quot;,0),
+			ARG&amp;lt;int&amp;gt;(&quot;second&quot;, 1),
+			ARG&amp;lt;int&amp;gt;(&quot;n&quot;, 10)
+	},
+	BODY{
+		VAR{
+			&quot;SUM&quot;,
+			PLUS(&quot;first&quot;, &quot;second&quot;)
+		},
+		VAR{
+			&quot;N&quot;,
+			MINUS(&quot;n&quot;, 1);
+		},
+		RETURN{
+			IF{
+				EQUAL{&quot;N&quot;, 1},
+				1
+			},
+			ELIF{
+				EQUAL {&quot;N&quot;, 2},
+				1
+			},
+			ELSE{
+				CALL_FUNC(&quot;fibonaci&quot;, &quot;second&quot;, &quot;SUM&quot;, &quot;N&quot;)
+			}
+		}
+	}
+}
+std::cout&amp;lt;&amp;lt;Fib()&amp;lt;&amp;lt;std::endl;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;We will try implement them in next blog post!&lt;/p&gt;</content><author><name></name></author><summary type="html">##Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</summary></entry><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00-04:00</published><updated>2017-04-18T00:00:00-04:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
 
 &lt;p&gt;In many cases, you will wonder to enumerate all possible candidates in the dictionary, by the way, it’s using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Brute-force_search&quot;&gt;Brute-force search&lt;/a&gt;. Also, enumerations can be using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Permutation&quot;&gt;permutation of objects&lt;/a&gt;. But first things first.&lt;/p&gt;
 
@@ -376,7 +838,7 @@ int main(){
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;That is! We can use this enumerator in many cases, like for permutation, brute-forces, fill databases and list with fake data, generation random data, etc…&lt;/p&gt;</content><author><name></name></author><summary type="html">Multifunctional enumerator, std::any{C++17} and templates.</summary></entry><entry><title type="html">Constexpr c++{14} and metaprogramming.</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Constexpr c++{14} and metaprogramming." /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
+&lt;p&gt;That is! We can use this enumerator in many cases, like for permutation, brute-forces, fill databases and list with fake data, generation random data, etc…&lt;/p&gt;</content><author><name></name></author><summary type="html">Multifunctional enumerator, std::any{C++17} and templates.</summary></entry><entry><title type="html">Metaprogramming and Constexpr c++{14}</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Metaprogramming and Constexpr c++{14} " /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
 Let’s look both cases:&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Apply to object&lt;/strong&gt;&lt;/p&gt;
