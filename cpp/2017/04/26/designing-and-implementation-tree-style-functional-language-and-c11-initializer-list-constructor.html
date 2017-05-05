@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)</title>
-  <meta name="description" content="##Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.co...">
+  <meta name="description" content="Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/...">
 
   <link rel="stylesheet" href="/assets/main.css">
   <link rel="canonical" href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">
@@ -64,8 +64,8 @@
   </header>
 
   <div class="post-content" itemprop="articleBody">
-    <p>##Initializer_list
-C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list<T>](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</T></p>
+    <h2 id="initializer_list">Initializer_list</h2>
+<p>C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list<T>](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</T></p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>//arr is std::initializer_list&lt;int&gt;
 auto arr = {1,2,3,4,5};
@@ -489,7 +489,6 @@ int main(){
 <p>Let’s take a look at the output, firstly we creating a VALUE leafs (lines 1-3). Moving leafs 5 and 11 into SUM object (4-6). Moving value and SUM object into the second sum(main sum) lines 7 - 10. After we see how all variables which were <a href="http://thbecker.net/articles/rvalue_references/section_01.html">rhs</a> are destroyed(10-13). Get result at line 14. And after that will be destroyed all object <code class="highlighter-rouge">sum</code> in the main function, cause function is destroyed.</p>
 
 <p>But we can create a cool concept language which will look like this:</p>
-
 <div class="highlighter-rouge"><pre class="highlight"><code>auto Fib = FUNC{
 	NAME{
 			"fibonaci"
@@ -526,7 +525,7 @@ int main(){
 std::cout&lt;&lt;Fib()&lt;&lt;std::endl;
 </code></pre>
 </div>
-<p>We will try implement them in next blog post!</p>
+<p>We create an object function for calculation <em>fibonacci number</em>, this object/function has a name, input arguments, and body. In the body, we define variables, makes some calculation, return value which depends on some condition or returns result of recursion call. Actually, by using this approach, we can implement more coolest algorithms like quick sort, or declare recursive data structures like trees. Yes, we will try to implement this function in next blog post!</p>
 
   </div>
 
