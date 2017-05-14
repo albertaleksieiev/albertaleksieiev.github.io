@@ -1,5 +1,337 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-04-26T23:48:44-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)</title><link href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html" rel="alternate" type="text/html" title="Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)" /><published>2017-04-26T00:00:00-04:00</published><updated>2017-04-26T00:00:00-04:00</updated><id>/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor</id><content type="html" xml:base="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">&lt;p&gt;##Initializer_list
-C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list&lt;T&gt;](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.&lt;/T&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-05-14T13:23:54-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Playing around with WebAssembly</title><link href="/cpp/2017/05/10/playing-around-with-webassembly.html" rel="alternate" type="text/html" title="Playing around with WebAssembly" /><published>2017-05-10T00:00:00-04:00</published><updated>2017-05-10T00:00:00-04:00</updated><id>/cpp/2017/05/10/playing-around-with-webassembly</id><content type="html" xml:base="/cpp/2017/05/10/playing-around-with-webassembly.html">&lt;p&gt;WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for &lt;em&gt;wasm&lt;/em&gt; is compilation C/C++ code, but also other languages are supported such as &lt;a href=&quot;https://en.wikipedia.org/wiki/Rust_programming_language&quot;&gt;Rust&lt;/a&gt;. Wasm allows run code faster and efficient, thanks to wasm code is &lt;a href=&quot;https://en.wikipedia.org/wiki/Stack_machine&quot;&gt;stack machine&lt;/a&gt;. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/MaJCfdmr9Wg&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;There exist a popular &lt;a href=&quot;https://en.wikipedia.org/wiki/Asm.js&quot;&gt;asm.js&lt;/a&gt; which allow the almost the same as wasm except for a few important features for wasm:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Wasm compiled into &lt;strong&gt;byte-code&lt;/strong&gt;, when asm.js is modified high-perfomance js language. It’s means asm.js can be parsed &lt;a href=&quot;https://blog.mozilla.org/luke/2014/01/14/asm-js-aot-compilation-and-startup-performance/&quot;&gt;slower&lt;/a&gt; than wasm can be decoded, some sources says it’s faster than in 20x times. That allow decrease waiting time for your &lt;strong&gt;users&lt;/strong&gt;.&lt;/li&gt;
+  &lt;li&gt;Constant-time type checking, and well-formedness cheching.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://webassembly.org/docs/rationale/&quot;&gt;Rational designed&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Stack machine allow smaller binary encoding.&lt;/li&gt;
+      &lt;li&gt;Dense Encoding and effecient decoding, compilation, and interpratation - thanks to stack machine.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you have a project written in &lt;code class=&quot;highlighter-rouge&quot;&gt;asm.js&lt;/code&gt;, you can easily compile it into wasm.&lt;/p&gt;
+&lt;h2 id=&quot;use-cases&quot;&gt;Use cases&lt;/h2&gt;
+&lt;p&gt;First of all, wasm can be run on the web platform and &lt;a href=&quot;https://github.com/WebAssembly/design/blob/master/NonWeb.md&quot;&gt;non-web&lt;/a&gt; platforms - like Node.js. In web platform, wasm has a wide range of usage, for me as AR developer to which is important every millisecond, wasm can be lifebuoy to run AR algorithms in the web.&lt;/p&gt;
+
+&lt;h4 id=&quot;wasm-use-cases&quot;&gt;Wasm use-cases:&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;Working with wide range of library which wrote on C++&lt;/li&gt;
+  &lt;li&gt;Image/video editing.&lt;/li&gt;
+  &lt;li&gt;Audio Industry - &lt;a href=&quot;https://www.youtube.com/watch?v=boPEO2auJj4&quot;&gt;thanks to Timur Doumler&lt;/a&gt; for this great video about performance in the audio industry.&lt;/li&gt;
+  &lt;li&gt;Music streaming.&lt;/li&gt;
+  &lt;li&gt;Image recognition.&lt;/li&gt;
+  &lt;li&gt;Video augmentation(like snapchat lenses put’s some assets on your face)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;VR and AR&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Scientific simulation and visualization.&lt;/li&gt;
+  &lt;li&gt;Developing tooling(IDE’s, compilers, debugger, etc.) - Microsoft currently running &lt;a href=&quot;https://www.visualstudio.com/vso/&quot;&gt;visual studion&lt;/a&gt; in the browser.&lt;/li&gt;
+  &lt;li&gt;Platform simulation, virtual machines&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A full list of wasm use cases you can find &lt;a href=&quot;https://github.com/WebAssembly/design/blob/master/UseCases.md&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;demos&quot;&gt;Demo’s&lt;/h3&gt;
+
+&lt;h4 id=&quot;wasm&quot;&gt;Wasm&lt;/h4&gt;
+&lt;p&gt;OOn main wasm website, you can find Unity game &lt;a href=&quot;http://webassembly.org/demo/&quot;&gt;‘Tanks’&lt;/a&gt; which ported to wasm.
+&lt;img src=&quot;http://i.imgur.com/YMpbScY.png&quot; alt=&quot;Tanks&quot; /&gt;
+ Also, I found &lt;a href=&quot;https://s3.amazonaws.com/mozilla-games/ZenGarden/EpicZenGarden.html&quot;&gt;EpicZenGarder&lt;/a&gt;. I recommend to you run it on latest Firefox version. 
+&lt;img src=&quot;http://i.imgur.com/rFNkWko.jpg&quot; alt=&quot;EpicZenGarden&quot; /&gt;&lt;/p&gt;
+&lt;h4 id=&quot;asmjs&quot;&gt;Asm.js&lt;/h4&gt;
+&lt;p&gt;Asm.js not poor for demos unlike wasm, it has a lot of demo’s, you can find full list &lt;a href=&quot;https://github.com/kripken/emscripten/wiki/Porting-Examples-and-Demos&quot;&gt;here&lt;/a&gt;. I really enjoy &lt;a href=&quot;www.quakejs.com&quot;&gt;Quake&lt;/a&gt; port ☺️
+&lt;img src=&quot;http://i.imgur.com/qS11j2B.jpg&quot; alt=&quot;Quakejs&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://jamesfriend.com.au/pce-js&quot;&gt;Classic MacOS&lt;/a&gt;
+&lt;img src=&quot;http://i.imgur.com/PXNix3P.png&quot; alt=&quot;MacOS&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://kripken.github.io/sql.js/GUI/&quot;&gt;SQLite ported to js!&lt;/a&gt;
+&lt;img src=&quot;http://i.imgur.com/53e5Xup.png&quot; alt=&quot;SQLite.js&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;instalation&quot;&gt;Instalation&lt;/h3&gt;
+
+&lt;p&gt;For compilation from LLVM which can be generated by C++/C to wasm we will use awesome project &lt;a href=&quot;https://github.com/kripken/emscripten.git&quot;&gt;emscripten&lt;/a&gt;. If you use &lt;em&gt;Windows&lt;/em&gt; please skip this section and use this &lt;a href=&quot;https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html&quot;&gt;link&lt;/a&gt; to install.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cd ~/libs
+wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
+tar -xzf emsdk-portable.tar.gz &amp;amp;&amp;amp; rm emsdk-portable.tar.gz
+cd emsdk-portable
+./emsdk update
+./emsdk install latest
+./emsdk activate latest
+
+## Set system path
+source ./emsdk_env.sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;emscripten&quot;&gt;Emscripten&lt;/h4&gt;
+&lt;p&gt;Emscripten is a compiler, which takes &lt;a href=&quot;https://en.wikipedia.org/wiki/LLVM&quot;&gt;LLVM&lt;/a&gt; code as input and generates .js code, like asm.js code. Also, it can be used to compile into web assembly format. Emscripten used inside &lt;a href=&quot;https://github.com/WebAssembly/binaryen&quot;&gt;binaryen toolchain&lt;/a&gt; to compile into .wasm format. It takes c++ llvm bitcode, compile it into .s file, uses &lt;code class=&quot;highlighter-rouge&quot;&gt;s2wasm&lt;/code&gt; command from binaryen project to generate wasm bitcode.
+&lt;img src=&quot;http://i.imgur.com/zGS4DaY.png&quot; alt=&quot;Emscipten compilation diagramm&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;compile-simple-c11-code&quot;&gt;Compile simple C++{11} code&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;algorithm&amp;gt;
+#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;array&amp;gt;
+#include &amp;lt;iterator&amp;gt;
+
+int main(){
+    std::array&amp;lt;int, 20&amp;gt; array;
+    for(int i=0;i&amp;lt;array.size();i++){
+        array[i] = i;
+    }
+    std::random_shuffle(array.begin(), array.end());
+
+    std::cout&amp;lt;&amp;lt;&quot;Shuffled array&quot;&amp;lt;&amp;lt;std::endl;
+    std::copy(array.begin(), array.end(),std::ostream_iterator&amp;lt;int&amp;gt;(std::cout,&quot; &quot;));
+    std::cout&amp;lt;&amp;lt;std::endl;
+	
+	//Sorting
+    std::sort(array.begin(),array.end());
+
+    std::cout&amp;lt;&amp;lt;&quot;Sorted array&quot;&amp;lt;&amp;lt;std::endl;
+    std::copy(array.begin(), array.end(),std::ostream_iterator&amp;lt;int&amp;gt;(std::cout,&quot; &quot;));
+    std::cout&amp;lt;&amp;lt;std::endl;
+
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;simple.cpp&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Here we create a simple code, which fills array of length 20, shuffle it, and sort it. As you can see we use c++11 std::array, and standard library algorithms.&lt;/p&gt;
+
+&lt;h5 id=&quot;compile-c-into-wasm&quot;&gt;Compile C++ into wasm&lt;/h5&gt;
+&lt;p&gt;Emscripten can generate asm.js code and wasm code, and they can generate HTML for testing JS/wasm with a console which displays result of evaluation.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;emcc simple.cpp -o simple.html -s &quot;BINARYEN_METHOD='native-wasm'&quot; -s WASM=1 -O1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-o&lt;/code&gt; specify output for generated file.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-o simple.js&lt;/code&gt;, generates javascript code, which you can invoke for example by using nodejs &lt;code class=&quot;highlighter-rouge&quot;&gt;node simple.js&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-o simple.html&lt;/code&gt;, generates HTML for testing&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-s&lt;/code&gt; javascript code generation option.
+    &lt;ul&gt;
+      &lt;li&gt;BINARYEN_METHOD=’interpret-binary’ - force usage of wasm interpreter, &lt;a href=&quot;https://github.com/kripken/emscripten/wiki/WebAssembly&quot;&gt;read-more&lt;/a&gt;, if your platform doesn’t support webassembly(this method &lt;strong&gt;much&lt;/strong&gt; slower than native support).&lt;/li&gt;
+      &lt;li&gt;BINARYEN_METHOD=’native-wasm,asmjs’ - will try native support, and if fail will use asm.js.&lt;/li&gt;
+      &lt;li&gt;WASM=1 or BINARYEN=1 generate &lt;code class=&quot;highlighter-rouge&quot;&gt;*.wasm&lt;/code&gt; code.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-O1&lt;/code&gt; enable LLVM optimization, by default all optimization disabled.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-Os&lt;/code&gt; enabling &lt;em&gt;super&lt;/em&gt; optimization.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Pleas take a look at &lt;a href=&quot;https://kripken.github.io/emscripten-site/docs/tools_reference/emcc.html&quot;&gt;this page&lt;/a&gt; with full list of arguments for &lt;code class=&quot;highlighter-rouge&quot;&gt;emcc&lt;/code&gt; tool.
+&lt;img src=&quot;http://i.imgur.com/LHk48Lh.png&quot; alt=&quot;simple.cpp&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;compile-into-js-file&quot;&gt;Compile into js file&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;emcc simple.cpp -o simple.js -s &quot;BINARYEN_METHOD='native-wasm'&quot; -s WASM=1 -Os
+echo &quot;&amp;lt;script src='./simple.js'&amp;gt;&amp;lt;/script&amp;gt;&quot; &amp;gt; index.html
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;And after opening file &lt;code class=&quot;highlighter-rouge&quot;&gt;index.html&lt;/code&gt; in the browser I have: 
+&lt;img src=&quot;http://i.imgur.com/WG77gkS.png&quot; alt=&quot;index.html&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;But when I trying run it in the node.js I have an error :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;node simple.js
+trying binaryen method: native-wasm
+no native wasm support detected
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;It seems nodejs doesn’t have and wasm interpreter, we need compile to asm.js &lt;code class=&quot;highlighter-rouge&quot;&gt;-s &quot;BINARYEN_METHOD='native-wasm,asm.js'&quot;&lt;/code&gt; or with force using interpreter &lt;code class=&quot;highlighter-rouge&quot;&gt;-s -BINARYEN_METHOD='interpret-binary'&lt;/code&gt;. I prefer asm.js because of performance(force using interpret much slower than asm.js).&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; emcc simple.cpp -o simple.js -s &quot;BINARYEN_METHOD='native-wasm,asmjs'&quot; -s WASM=1 -Os
+&amp;gt; time node simple.js 
+trying binaryen method: native-wasm
+no native wasm support detected
+trying binaryen method: asmjs
+binaryen method succeeded.
+Shuffled array
+14 13 7 4 0 16 9 12 2 19 10 18 5 3 8 1 17 6 11 15 
+Sorted array
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 
+node simple.js  0.17s user 0.03s system 97% cpu 0.197 total
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;how-webassembly-works&quot;&gt;How webassembly works?&lt;/h2&gt;
+&lt;p&gt;As I said above wasm using stack machine model on the hood, that helps run code faster and efficient.&lt;/p&gt;
+
+&lt;h3 id=&quot;stack-machine&quot;&gt;Stack machine&lt;/h3&gt;
+&lt;p&gt;A stack machine is a type of computer, but &lt;em&gt;wasm&lt;/em&gt; just imitate stack machine. This type of ‘computer’ has only two operations: push, pop and some computation with poped values like operation add(+). As you might have guessed stack machine using [stack aka LIFO](https://en.wikipedia.org/wiki/Stack_(abstract_data_type) inside.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lifo_stack.png/700px-Lifo_stack.png&quot; alt=&quot;Stack&quot; /&gt;
+&lt;em&gt;Stack ilustration&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;A stack machine is easy to understand and it has a lot of advantages:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Each operation pop’s and push’s from the same place.&lt;/li&gt;
+  &lt;li&gt;Uniform compiler scheme&lt;/li&gt;
+  &lt;li&gt;Very compact code&lt;/li&gt;
+  &lt;li&gt;Simple compiler, because of uniform compiler scheme&lt;/li&gt;
+  &lt;li&gt;Simple interpreter&lt;/li&gt;
+  &lt;li&gt;Fast operation access&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;stack-machine---compilation&quot;&gt;Stack machine - compilation&lt;/h4&gt;
+&lt;p&gt;Let’s imagine we need compile this expression &lt;code class=&quot;highlighter-rouge&quot;&gt;(a + b) * c - d&lt;/code&gt;. Where &lt;a href=&quot;https://en.wikipedia.org/wiki/S-expression&quot;&gt;S-expression&lt;/a&gt; is &lt;code class=&quot;highlighter-rouge&quot;&gt;(- (* (+ a b) c) d)&lt;/code&gt;.
+Syntax tree will look like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/rhKI5Hh.png&quot; alt=&quot;syntax tree&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After compilation, generated code will look like :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PUSH(a)
+PUSH(b)
+PUSH(POP() + POP())
+PUSH(c)
+PUSH(POP() * POP())
+PUSH(d)
+PUSH(POP() - POP())
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Now evaluate this code so easily, like play chess without any chessman :) Evaluation:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[a]
+[a,b]
+[(a+b)]
+[(a+b),c]
+[(a+b)*c]
+[(a+b)*c,d]
+[(a+b)*c - d]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Here I just illustrate how our stack will look like in every step of evaluation code.&lt;/p&gt;
+
+&lt;h4 id=&quot;instructions&quot;&gt;Instructions&lt;/h4&gt;
+&lt;p&gt;Each function contains list of instructions, which can be:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Control instruction - loops, if/else conditions, return statement, blocks, branches.&lt;/li&gt;
+  &lt;li&gt;Simple instruction - is simple instruction, like add, subtract, multiply, etc.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#CONTROL INSTRUCTIONS
+for i in range 1..5
+	...
+end
+#SIMPLE INSTRUCTION
+1 + 5
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Most computation in wasm use stack of values, but loops, conditions expressed in structured constructs. You can read more &lt;a href=&quot;http://webassembly.org/docs/semantics/&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;storing-data&quot;&gt;Storing data&lt;/h4&gt;
+&lt;p&gt;WASM has 4 types of data:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;i32&lt;/code&gt; - integer 32 bit &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;i64&lt;/code&gt; - integer 64 bit &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;f32&lt;/code&gt; - float 32 bit &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;f64&lt;/code&gt; - float 64 bit &lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Variables can be &lt;em&gt;global&lt;/em&gt; or &lt;em&gt;local&lt;/em&gt;.&lt;br /&gt;
+&lt;strong&gt;Local&lt;/strong&gt; variables stored inside the function. Each function has pre-declared number of variable, and each of varialbe has type and initialized by default by +0. for float, 0 for integer, except &lt;em&gt;input fuction argument&lt;/em&gt; variables. Also wasm has function for interaction with variables, like:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;get_local&lt;/code&gt; - return local variable&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;set_local&lt;/code&gt; - set local variable&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;tee_local&lt;/code&gt; - set variable and return set value&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Global&lt;/strong&gt; can be mutable or immutable, also you can &lt;a href=&quot;http://webassembly.org/docs/modules/#imports&quot;&gt;import them&lt;/a&gt; or &lt;a href=&quot;http://webassembly.org/docs/modules/#global-section&quot;&gt;define inside the module&lt;/a&gt;, and ofc you can access global variables them by using methods:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;get_global&lt;/code&gt; - get global value&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;set_global&lt;/code&gt; - set global value&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Generation result value&lt;/strong&gt;
+In any high-level language it means generate constant variable &lt;code class=&quot;highlighter-rouge&quot;&gt;const int i = 5&lt;/code&gt;, this code will generate the constant variable type of integer. In wasm, you can generate variable by using &lt;code class=&quot;highlighter-rouge&quot;&gt;%TYPE%.const&lt;/code&gt; keyword, where &lt;code class=&quot;highlighter-rouge&quot;&gt;%TYPE&lt;/code&gt; is &lt;code class=&quot;highlighter-rouge&quot;&gt;i64&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;i32&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;f64&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;f32&lt;/code&gt;, for example:
+&lt;code class=&quot;highlighter-rouge&quot;&gt;i64.const 15&lt;/code&gt; - create a constant variable with type of 64 bit integer and assign value 15 to this const.
+&lt;strong&gt;Function calls&lt;/strong&gt;
+Each function contains: &lt;em&gt;sequence of return types&lt;/em&gt;, and &lt;em&gt;sequence of input argument types&lt;/em&gt;. A function doesn’t support varargs. To call function use &lt;code class=&quot;highlighter-rouge&quot;&gt;call&lt;/code&gt; keyword, where argument is function index in &lt;a href=&quot;http://webassembly.org/docs/modules/#function-index-space&quot;&gt;function index space&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;wasm-binary-code-example&quot;&gt;WASM binary code example&lt;/h4&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;C++&lt;/th&gt;
+    &lt;th&gt;Binary&lt;/th&gt;
+    &lt;th&gt;Text&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;pre&gt;
+int factorial(int n) {
+  if (n == 0)
+    return 1;
+  else
+    return n * factorial(n-1);
+}&lt;/pre&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;pre&gt;
+20 00
+42 00
+51
+04 7e
+42 01
+05
+20 00
+20 00
+42 01
+7d
+10 00
+7e
+0b&lt;/pre&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;pre&gt;
+get_local 0
+i64.const 0
+i64.eq
+if i64
+    i64.const 1
+else
+    get_local 0
+    get_local 0
+    i64.const 1
+    i64.sub
+    call 0
+    i64.mul
+end&lt;/pre&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;em&gt;&lt;a href=&quot;https://github.com/WebAssembly/design/blob/master/TextFormat.md&quot;&gt;Binary code can be easily translated into text format&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Here was I try to show stack in each line of code:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1.  get_local 0     # [n]
+2.  i64.const 0	   # [n,0]
+3.  i64.eq          # [n == 0]
+4.  if i64          # n == 0 ?
+5.     i64.const 1 # [1]
+6.  else
+7.     get_local 0 # [n]
+8.     get_local 0 # [n, n]
+9.     i64.const 1 # [n, n, 1]
+10.    i64.sub     # [n, n - 1]
+11.    call 0      # [n, fibonaci(n-1)]
+12.    i64.mul     # [n * fibonaci(n - 1)]
+13. end             
+# returs 1 or n * fibonaci(n - 1), depends on if-else statement
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;On the first line &lt;code class=&quot;highlighter-rouge&quot;&gt;get_local 0&lt;/code&gt; get the local variable by index 0, &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.const 0&lt;/code&gt; - create constant variable with value 0, &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.eq&lt;/code&gt; - checking last two values in the stack( the result of evaluation &lt;code class=&quot;highlighter-rouge&quot;&gt;get_local 0&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.const 0&lt;/code&gt;), and put the result in a stack. Condition line if: &lt;code class=&quot;highlighter-rouge&quot;&gt;if i64&lt;/code&gt; - popping a value from the stack and checking value, if a condition is true pushing in the stack value 1, otherwise going to line 7. Pushing values into the stack on line 7-9, making subtraction, &lt;code class=&quot;highlighter-rouge&quot;&gt;call 0&lt;/code&gt; calls function by index 0 and put the result of the evaluation in the stack. Line 12 multiply &lt;code class=&quot;highlighter-rouge&quot;&gt;call 0&lt;/code&gt; and n. And at end of the function, we return the result.&lt;/p&gt;
+
+&lt;p&gt;In the next blog post, we will dive into webassembly code,and run interesting benchmarks.&lt;/p&gt;</content><author><name></name></author><summary type="html">WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for wasm is compilation C/C++ code, but also other languages are supported such as Rust. Wasm allows run code faster and efficient, thanks to wasm code is stack machine. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!</summary></entry><entry><title type="html">Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)</title><link href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html" rel="alternate" type="text/html" title="Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)" /><published>2017-04-26T00:00:00-04:00</published><updated>2017-04-26T00:00:00-04:00</updated><id>/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor</id><content type="html" xml:base="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">&lt;h2 id=&quot;initializer_list&quot;&gt;Initializer_list&lt;/h2&gt;
+&lt;p&gt;C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list&lt;T&gt;](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.&lt;/T&gt;&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//arr is std::initializer_list&amp;lt;int&amp;gt;
 auto arr = {1,2,3,4,5};
@@ -423,7 +755,6 @@ int main(){
 &lt;p&gt;Let’s take a look at the output, firstly we creating a VALUE leafs (lines 1-3). Moving leafs 5 and 11 into SUM object (4-6). Moving value and SUM object into the second sum(main sum) lines 7 - 10. After we see how all variables which were &lt;a href=&quot;http://thbecker.net/articles/rvalue_references/section_01.html&quot;&gt;rhs&lt;/a&gt; are destroyed(10-13). Get result at line 14. And after that will be destroyed all object &lt;code class=&quot;highlighter-rouge&quot;&gt;sum&lt;/code&gt; in the main function, cause function is destroyed.&lt;/p&gt;
 
 &lt;p&gt;But we can create a cool concept language which will look like this:&lt;/p&gt;
-
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;auto Fib = FUNC{
 	NAME{
 			&quot;fibonaci&quot;
@@ -460,7 +791,7 @@ int main(){
 std::cout&amp;lt;&amp;lt;Fib()&amp;lt;&amp;lt;std::endl;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
-&lt;p&gt;We will try implement them in next blog post!&lt;/p&gt;</content><author><name></name></author><summary type="html">##Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</summary></entry><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00-04:00</published><updated>2017-04-18T00:00:00-04:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
+&lt;p&gt;We create an object function for calculation &lt;em&gt;fibonacci number&lt;/em&gt;, this object/function has a name, input arguments, and body. In the body, we define variables, makes some calculation, return value which depends on some condition or returns result of recursion call. Actually, by using this approach, we can implement more coolest algorithms like quick sort, or declare recursive data structures like trees. Yes, we will try to implement this function in next blog post!&lt;/p&gt;</content><author><name></name></author><summary type="html">Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</summary></entry><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00-04:00</published><updated>2017-04-18T00:00:00-04:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
 
 &lt;p&gt;In many cases, you will wonder to enumerate all possible candidates in the dictionary, by the way, it’s using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Brute-force_search&quot;&gt;Brute-force search&lt;/a&gt;. Also, enumerations can be using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Permutation&quot;&gt;permutation of objects&lt;/a&gt;. But first things first.&lt;/p&gt;
 
