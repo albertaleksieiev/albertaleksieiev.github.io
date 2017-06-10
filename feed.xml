@@ -1,4 +1,571 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-05-14T13:23:54-04:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Playing around with WebAssembly</title><link href="/cpp/2017/05/10/playing-around-with-webassembly.html" rel="alternate" type="text/html" title="Playing around with WebAssembly" /><published>2017-05-10T00:00:00-04:00</published><updated>2017-05-10T00:00:00-04:00</updated><id>/cpp/2017/05/10/playing-around-with-webassembly</id><content type="html" xml:base="/cpp/2017/05/10/playing-around-with-webassembly.html">&lt;p&gt;WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for &lt;em&gt;wasm&lt;/em&gt; is compilation C/C++ code, but also other languages are supported such as &lt;a href=&quot;https://en.wikipedia.org/wiki/Rust_programming_language&quot;&gt;Rust&lt;/a&gt;. Wasm allows run code faster and efficient, thanks to wasm code is &lt;a href=&quot;https://en.wikipedia.org/wiki/Stack_machine&quot;&gt;stack machine&lt;/a&gt;. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-06-10T20:55:25+03:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Simple C/C++ computation cluster</title><link href="/cpp/2017/06/01/simple-cc97-computation-cluster.html" rel="alternate" type="text/html" title="Simple C/C++ computation cluster" /><published>2017-06-01T00:00:00+03:00</published><updated>2017-06-01T00:00:00+03:00</updated><id>/cpp/2017/06/01/simple-cc97-computation-cluster</id><content type="html" xml:base="/cpp/2017/06/01/simple-cc97-computation-cluster.html">&lt;h4 id=&quot;cluster-computing&quot;&gt;Cluster computing&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;https://qph.ec.quoracdn.net/main-qimg-f78e88e58d74f6a67092381fc56b6baa-c&quot; alt=&quot;Computer cluster&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A &lt;a href=&quot;https://en.wikipedia.org/wiki/Computer_cluster&quot;&gt;Cluster computing&lt;/a&gt; is set of computers(nodes) which working together, it can be interpreted as single system where each computer is processor. All of computers working on the same task and this bunch of computers connected in one network. One node can share data to another node, and master node can share data to slave nodes.&lt;/p&gt;
+
+&lt;p&gt;Computer cluster usually used to increase performance and availability over than a single computer. It can be used in many cases, started from web-service support to high-performance computation. Usually each node run own instance of the operating system, but nodes can use the same operating system and use some setups(like &lt;a href=&quot;http://svn.oscar.openclustergroup.org/trac/oscar&quot;&gt;OSCAR&lt;/a&gt;). Also for increasing performance computing, clusters using parallel computing such as &lt;a href=&quot;https://en.wikipedia.org/wiki/Message_Passing_Interface&quot;&gt;MPI&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;beowulf-cluster&quot;&gt;Beowulf cluster&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;http://www.cs.mtu.edu/beowulf/misc/cluster.jpg&quot; alt=&quot;Beowulf cluster&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;One of the most popular cluster is &lt;a href=&quot;http://www.beowulf.org/&quot;&gt;Beowulf cluster&lt;/a&gt;. Beowulf cluster is Open Source scalable performance cluster, on a small &lt;a href=&quot;https://en.wikipedia.org/wiki/Local_area_network&quot;&gt;LAN&lt;/a&gt;. Beowulf, it’s kind of software recipe, what software you need to use to build cluster. They include &lt;a href=&quot;https://en.wikipedia.org/wiki/OpenMPI&quot;&gt;OpenMPI&lt;/a&gt; or &lt;a href=&quot;https://en.wikipedia.org/wiki/MPICH&quot;&gt;MPICH&lt;/a&gt;, &lt;a href=&quot;https://en.wikipedia.org/wiki/Parallel_Virtual_Machine&quot;&gt;PVM&lt;/a&gt;, Linux kernel and many &lt;a href=&quot;http://www.beowulf.org/overview/faq.html#3&quot;&gt;others&lt;/a&gt;. It’s can be interpreted as ‘build computer cluster at home’, that allow building a hight-performance cluster on cheap PC hardware.&lt;/p&gt;
+
+&lt;h4 id=&quot;our-cluster&quot;&gt;Our ‘cluster’&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/RbEEHFc.png&quot; alt=&quot;Simple cluster&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In this topic, I will show you simple version of cluster computing without sharing information between nodes, and without any cluster OS or cluster software. For simplification, just imagine you have a lot of different remote computers in different regions, and every computer computes some function &lt;code class=&quot;highlighter-rouge&quot;&gt;f(x)&lt;/code&gt;. Function &lt;code class=&quot;highlighter-rouge&quot;&gt;f&lt;/code&gt; and parameter &lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; can be the same on every computer or depends on the computer.&lt;/p&gt;
+
+&lt;p&gt;It will be a simple C++ code which will be run on a computer, and for communication, we will use &lt;a href=&quot;https://en.wikipedia.org/wiki/User_Datagram_Protocol&quot;&gt;UDP&lt;/a&gt; protocol. It allows to us greatly simplify integrating computation cluster, we just need include header, implement response on message(receive a new parameter for computation, get intermediate results, etc…) and implement our computation function.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &quot;socket.h&quot;
+
+long long val = 1000;
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+    sendto(sockfd, &amp;amp;val, sizeof(val), 0, their_addr, addr_len);
+}
+void calcFunc(void*){
+    while(true){
+        val++;
+        val%=10;
+    }
+}
+int main(){
+    CalculationSocketManager calculationSocketManager(&quot;4950&quot;,on_message); //Run on port 4950
+
+    calculationSocketManager.start(calcFunc);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;implementation&quot;&gt;Implementation&lt;/h3&gt;
+
+&lt;p&gt;Instead of &lt;a href=&quot;https://en.wikipedia.org/wiki/Transmission_Control_Protocol&quot;&gt;TCP&lt;/a&gt; we will use &lt;a href=&quot;https://en.wikipedia.org/wiki/User_Datagram_Protocol&quot;&gt;UDP&lt;/a&gt;, because we do not need continuous connection. For implementation we will use &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;sys/socket.h&amp;gt;&lt;/code&gt; header, it available for *nix machines, I run it on MacOS machine. If you are using Windows machine please include &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;winsock2.h&amp;gt;&lt;/code&gt; header, it describes &lt;a href=&quot;https://stackoverflow.com/a/4642169&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Firstly we need to create and bind UDP socket.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int sockfd;
+struct addrinfo hints, *servinfo, *p;
+
+int rv;
+//Convert port to address info
+if ((rv = getaddrinfo(NULL, this-&amp;gt;port, &amp;amp;hints, &amp;amp;servinfo)) != 0) {
+    fprintf(stderr, &quot;getaddrinfo: %s\n&quot;, gai_strerror(rv));
+    return 1;
+}
+
+// loop through all the results and bind to the first we can
+for(p = servinfo; p != NULL; p = p-&amp;gt;ai_next) {
+    //Create
+    if ((sockfd = socket(p-&amp;gt;ai_family, p-&amp;gt;ai_socktype,
+                         p-&amp;gt;ai_protocol)) == -1) {
+        continue;
+    }
+    //Bind
+	if (bind(sockfd, p-&amp;gt;ai_addr, p-&amp;gt;ai_addrlen) == -1) {
+        close(sockfd);
+        continue;
+    }
+    break;
+}
+if (p == NULL) {
+    fprintf(stderr, &quot;Cannot create/bind socket!\n&quot;);
+    return 2;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;After that, we need to receive a message from the socket.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; while(true) {
+    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0,
+                             (struct sockaddr *) &amp;amp;their_addr, &amp;amp;addr_len)) == -1) {
+        perror(&quot;recvfrom&quot;);
+        exit(1);
+    }
+
+	//Function pointer
+    onmessage(sockfd,buf,(struct sockaddr *) &amp;amp;their_addr, (socklen_t) addr_len);
+
+    buf[numbytes] = '\0';
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;onmessage&lt;/code&gt; is function pointer aka callback, which we need to implement. In our case, it will be a response to master node request, for example, send current intermediate result and it will depend on the message which will be received.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;typedef void(*onmessage_callback)(int, char*, struct sockaddr *, socklen_t);
+
+onmessage_callback onmessage;
+
+...
+
+char buf[2048];
+
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+    float progress = 0.12;
+    int val = 1011;
+    int n = sprintf(buf,&quot;%d,%f&quot;,val, progress);
+    sendto(sockfd, buf, n, 0, their_addr, addr_len);
+}
+
+onmessage = on_message;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Here we just send a message with 2 values each time, when we receive a request. But in working example, we will send current calculated value and current progress.&lt;/p&gt;
+
+&lt;p&gt;As we can see above we are waiting for the incoming message when we are waiting, current thread is &lt;strong&gt;blocked&lt;/strong&gt;! So we need to create tread and receive a message in another thread. But firstly we need to create a class with all code above.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;errno.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;sys/socket.h&amp;gt;
+#include &amp;lt;netinet/in.h&amp;gt;
+#include &amp;lt;arpa/inet.h&amp;gt;
+#include &amp;lt;netdb.h&amp;gt;
+
+#include &amp;lt;pthread.h&amp;gt;
+
+#ifndef SERVER_SOCKET_H
+#define SERVER_SOCKET_H
+
+
+typedef void(*onmessage_callback)(int, char*, struct sockaddr *, socklen_t);
+
+class ServerSocket{
+    char* port;
+public:
+    onmessage_callback onmessage;
+    ServerSocket(const char* port, onmessage_callback onmessage){
+        this-&amp;gt;port = new char[strlen(port)];
+        strcpy(this-&amp;gt;port, port);
+
+        this-&amp;gt;onmessage = onmessage;
+    }
+    ~ServerSocket(){
+        delete this-&amp;gt;port;
+    }
+
+    int start(){
+        int sockfd;
+        struct addrinfo hints, *servinfo, *p;
+        int rv;
+        int numbytes;
+        struct sockaddr_storage their_addr;
+        int MAXBUFLEN = 128;
+
+        char buf[MAXBUFLEN];
+        socklen_t addr_len;
+        char s[INET6_ADDRSTRLEN];
+
+        memset(&amp;amp;hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_flags = AI_PASSIVE; // use my IP
+
+        if ((rv = getaddrinfo(NULL, this-&amp;gt;port, &amp;amp;hints, &amp;amp;servinfo)) != 0) {
+            fprintf(stderr, &quot;getaddrinfo: %s\n&quot;, gai_strerror(rv));
+            return 1;
+        }
+
+        // loop through all the results and bind to the first we can
+        for(p = servinfo; p != NULL; p = p-&amp;gt;ai_next) {
+            if ((sockfd = socket(p-&amp;gt;ai_family, p-&amp;gt;ai_socktype,
+                                 p-&amp;gt;ai_protocol)) == -1) {
+                perror(&quot;listener: socket&quot;);
+                continue;
+            }
+
+            if (bind(sockfd, p-&amp;gt;ai_addr, p-&amp;gt;ai_addrlen) == -1) {
+                close(sockfd);
+                perror(&quot;listener: bind&quot;);
+                continue;
+            }
+
+            break;
+        }
+
+        if (p == NULL) {
+            fprintf(stderr, &quot;listener: failed to bind socket\n&quot;);
+            return 2;
+        }
+
+        freeaddrinfo(servinfo);
+
+
+        addr_len = sizeof their_addr;
+
+        while(true) {
+            if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0,
+                                     (struct sockaddr *) &amp;amp;their_addr, &amp;amp;addr_len)) == -1) {
+                perror(&quot;recvfrom&quot;);
+                exit(1);
+            }
+
+
+            onmessage(sockfd,buf,(struct sockaddr *) &amp;amp;their_addr, (socklen_t) addr_len);
+
+            buf[numbytes] = '\0';
+        }
+        close(sockfd);
+    }
+};
+#endif
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;File sluster.h&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For creation new thread we will use &lt;a href=&quot;https://en.wikipedia.org/wiki/POSIX_Threads&quot;&gt;phtreads&lt;/a&gt;. It really simple to implement thread with pthreads, also you use &lt;a href=&quot;http://en.cppreference.com/w/cpp/thread/thread&quot;&gt;C++11 std::thread&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;void* socket_func(void* server_socket){
+    ServerSocket* serverSocket = (ServerSocket*)server_socket;
+    serverSocket-&amp;gt;start();
+}
+
+
+pthread_t socket_thread;
+ServerSocket serverSocket(&quot;4950&quot;, &amp;amp;onMessage);
+
+if(pthread_create(&amp;amp;socket_thread, NULL,socket_func, serverSocket)) {
+    fprintf(stderr, &quot;Error creating socket thread\n&quot;);
+    return 1;
+} 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The thread will be started after creation, and you need to implement &lt;code class=&quot;highlighter-rouge&quot;&gt;onMessage&lt;/code&gt; function. Let’s wrap it into class.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;...
+
+
+class CalculationSocketManager{
+    ServerSocket* serverSocket;
+    pthread_t socket_thread;
+
+public:
+    CalculationSocketManager(char* port, onmessage_callback onmessage){
+        serverSocket = new ServerSocket(port, onmessage);
+    }
+    ~CalculationSocketManager(){
+        delete serverSocket;
+    }
+    int start(void(*calc_func)(void*) ){
+
+
+        if(pthread_create(&amp;amp;socket_thread, NULL,socket_func, this-&amp;gt;serverSocket)) {
+            fprintf(stderr, &quot;Error creating socket thread\n&quot;);
+            return 1;
+        }
+        //Start calculation
+        calc_func(NULL);
+    }
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;File sluster.h&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we can try to test it :) We will calculate Fibonacci number without any performance modification starting from the number 38.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &quot;sluster.h&quot;
+#include &amp;lt;vector&amp;gt;
+#include &amp;lt;utility&amp;gt;
+
+std::vector&amp;lt;std::pair&amp;lt;int,long long&amp;gt;&amp;gt; results;
+int value = 38;
+char buf[16394];
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+
+    int offset = 0;
+    for(auto&amp;amp; p: results){
+        offset += sprintf(buf+offset,&quot;%d,%lld\n&quot;,p.first, p.second);
+    }
+
+    sendto(sockfd, buf, offset, 0, their_addr, addr_len);
+}
+
+long long fib(int n){
+    if(n &amp;lt; 2){
+        return 1;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+void calcFunc(void*){
+    while(true) {
+        results.push_back({value, fib(value)});
+        value++;
+    }
+}
+
+
+int main(){
+    CalculationSocketManager calculationSocketManager(&quot;4950&quot;,on_message);
+
+    calculationSocketManager.start(calcFunc);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;File main.cpp&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For sending requests we can write a client or use &lt;a href=&quot;https://en.wikipedia.org/wiki/Netcat&quot;&gt;Netcat&lt;/a&gt;. Here we use netcat.
+&lt;img src=&quot;http://i.imgur.com/J2Dhtov.png&quot; alt=&quot;netcat&quot; /&gt;
+Woho, it works great and it ready to use. Let’s try to deploy it.&lt;/p&gt;
+
+&lt;h3 id=&quot;deploying&quot;&gt;Deploying&lt;/h3&gt;
+
+&lt;p&gt;Usually, I use AWS, but now I will use Google Cloud. You can see tutorial how to create google cloud instance &lt;a href=&quot;https://cloud.google.com/compute/docs/quickstart-linux&quot;&gt;here&lt;/a&gt;. After login into the remote machine, clone &lt;a href=&quot;https://github.com/albertaleksieiev/sluster&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sluster&lt;/code&gt;&lt;/a&gt; repo, compile and run.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; git clone https://github.com/albertaleksieiev/sluster.git
+&amp;gt; cd sluster/example 
+&amp;gt; g++ fib.cpp -pthread -o main.o
+&amp;gt; ./main.o
+starting UDP server on port 4950
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;After that, you need to open port &lt;code class=&quot;highlighter-rouge&quot;&gt;4950&lt;/code&gt; in your firewall, in Google cloud you need to go to your app dashboard and type in search input &lt;code class=&quot;highlighter-rouge&quot;&gt;Networking&lt;/code&gt; and select it:
+&lt;img src=&quot;http://i.imgur.com/eYV4Cqd.png&quot; alt=&quot;gcp&quot; /&gt;
+Go to &lt;code class=&quot;highlighter-rouge&quot;&gt;Firewall rules&lt;/code&gt;, click &lt;code class=&quot;highlighter-rouge&quot;&gt;create firewall rule&lt;/code&gt; and fill fields:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Name: any name for this rule&lt;/li&gt;
+  &lt;li&gt;Source IP ranges: &lt;code class=&quot;highlighter-rouge&quot;&gt;0.0.0.0/0&lt;/code&gt; - for any IP, or type your IP. Trafic only allowed with this IP.&lt;/li&gt;
+  &lt;li&gt;Protocols and Ports: &lt;code class=&quot;highlighter-rouge&quot;&gt;udp:4950&lt;/code&gt; - allow 4950 port for UDP.
+&lt;img src=&quot;http://i.imgur.com/2mkcd3T.png&quot; alt=&quot;Allowing ports&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;And now I can connect to remote connection and get intermediate results, for calculation Fibonacci num. We just need run from local machine netcat but instead &lt;strong&gt;&lt;em&gt;localhost&lt;/em&gt;&lt;/strong&gt; enter remote machine IP address. And we need to run our server as a daemon because if we close ssh connection, our serve will be closed too. I use &lt;a href=&quot;https://en.wikipedia.org/wiki/Tmux&quot;&gt;tmux&lt;/a&gt;, but you can use &lt;a href=&quot;https://en.wikipedia.org/wiki/GNU_Screen&quot;&gt;screen&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ok, firstly we shut down our server if it runs on the remote machine. After that run new &lt;code class=&quot;highlighter-rouge&quot;&gt;tmux&lt;/code&gt; session, and run a server from this session.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Run server on remote machine&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; tmux
+&amp;gt; g++ fib.cpp -pthread -o main.o
+&amp;gt; ./main.o
+starting UDP server on port 4950
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Get results, runned from local machine&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; nc -u 11.111.11.111 4950
+&amp;gt; 
+38,63245986
+39,102334155
+40,165580141
+41,267914296
+42,433494437
+43,701408733
+44,1134903170
+45,1836311903
+46,2971215073
+47,4807526976
+48,7778742049
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Change &lt;code class=&quot;highlighter-rouge&quot;&gt;11.111.11.111&lt;/code&gt; to your remote machine IP address.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;md5-passwords&quot;&gt;MD5 passwords&lt;/h3&gt;
+
+&lt;p&gt;Cool it’s really easy to integrate, and it’s working! Just &lt;code class=&quot;highlighter-rouge&quot;&gt;clone repo&lt;/code&gt; -&amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;#include &quot;sluster.h&quot;&lt;/code&gt; -&amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;implement 2 functions&lt;/code&gt; -&amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;open ports&lt;/code&gt;. But now let’s try to implement something interesting, like bruteforce attack to md5 passwords :).&lt;/p&gt;
+
+&lt;p&gt;For simplification, we will have a bunch of encoded in md5 passwords. But firstly wee need to implement this in our handle message function. All data will be passed in JSON format, we will use &lt;a href=&quot;http://www.boost.org/doc/libs/1_55_0/doc/html/boost_propertytree/parsers.html&quot;&gt;Boost Property Tree&lt;/a&gt;, we will have 3 functions.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Add encoded passwords. &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;add&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;passwords&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;32CFE6C19200B67AFB7C3D0E1C43EADB&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;332FE6C19200B67AFB7C3D0E1C43EADB&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Start bruteforcing, we will pass all possible ranges for passwords. &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;start-bruteforce&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;ranges&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:[{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;9&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]}&lt;/span&gt;&lt;/code&gt; - current message will try all possible lowercase letters in first position with all possible digits in second position, all possible number of combination = &lt;code class=&quot;highlighter-rouge&quot;&gt;26 * 9 = 234&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Status returns cracked passwords, and current progress. Request message : &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;status&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;, responce message :&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'current-progress':10,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'max-progress':'234',&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; 
+	&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'cracked-passwords':[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+		&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+			&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'pass':'a5','md5':'32CFE6C19200B67AFB7C3D0E1C43EADB'&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+		&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;implementation-1&quot;&gt;Implementation&lt;/h4&gt;
+&lt;p&gt;Firstly we need to implement a md5 function, really good source &lt;a href=&quot;http://www.zedwood.com/article/cpp-md5-function&quot;&gt;here&lt;/a&gt; copy and paste it into a header file and include this header &lt;code class=&quot;highlighter-rouge&quot;&gt;#include &quot;md5.h&quot;&lt;/code&gt;, the working code you can find &lt;a href=&quot;https://github.com/albertaleksieiev/sluster/blob/master/example/md5/md5.h&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;After that we need &lt;a href=&quot;http://www.boost.org/doc/libs/1_61_0/doc/html/property_tree.html&quot;&gt;Boost.PropertyTree&lt;/a&gt; package.&lt;/p&gt;
+
+&lt;p&gt;I already install boost on my PC, so you need to install it too. I use CMake in my project, so I need to add dependencies into &lt;code class=&quot;highlighter-rouge&quot;&gt;CMakeLists.txt&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;...
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.61.0)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    add_executable(SocketClient socket/client.cpp)
+    target_link_libraries(SocketClient ${Boost_LIBRARIES})
+endif()
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;CMakeLists.txt&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;After that I need to implement message handler function:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;std::unordered_set&amp;lt;std::string&amp;gt; md5Passwords;
+std::vector&amp;lt;std::string&amp;gt; crackedPasswords;
+long long curr_progress = 0;
+long long max_progress = 0;
+long long keyLenght = 0;
+
+
+#include &amp;lt;boost/property_tree/ptree.hpp&amp;gt;
+#include &amp;lt;boost/property_tree/json_parser.hpp&amp;gt;
+
+#include &amp;lt;boost/foreach.hpp&amp;gt;
+template &amp;lt;typename T&amp;gt;
+std::vector&amp;lt;T&amp;gt; as_vector(boost::property_tree::ptree const&amp;amp; pt, boost::property_tree::ptree::key_type const&amp;amp; key)
+{
+    std::vector&amp;lt;T&amp;gt; r;
+    for (auto&amp;amp; item : pt.get_child(key))
+        r.push_back(item.second.get_value&amp;lt;T&amp;gt;());
+    return r;
+}
+
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+
+    using boost::property_tree::ptree;
+    using boost::property_tree::read_json;
+    using boost::property_tree::write_json;
+
+    ptree messageObj;
+    std::istringstream is (msg);
+    read_json (is, messageObj);
+
+
+    std::string command = messageObj.get&amp;lt;std::string&amp;gt; (&quot;command&quot;);
+    if(command == &quot;add&quot;){
+        for(auto md5: as_vector&amp;lt;std::string&amp;gt;(messageObj,&quot;passwords&quot;)){
+            md5Passwords.push_back(md5);
+        }
+        sprintf(buf, &quot;added %d passwords&quot;, (int)md5Passwords.size());
+    }else if(command == &quot;start-bruteforce&quot;){
+        BOOST_FOREACH(const ptree::value_type&amp;amp; child,
+                      messageObj.get_child(&quot;ranges&quot;)) {
+                        char begin = child.second.get&amp;lt;char&amp;gt;(&quot;begin&quot;);
+
+                        char end = child.second.get&amp;lt;char&amp;gt;(&quot;end&quot;);
+                        std::cout&amp;lt;&amp;lt;begin&amp;lt;&amp;lt;' '&amp;lt;&amp;lt;end&amp;lt;&amp;lt;std::endl;
+                        //Add logic
+                    }
+        sprintf(buf, &quot;starting&quot;);
+    }else if(command == &quot;status&quot;){
+        ptree pt;
+        pt.put(&quot;current-progress&quot;,curr_progress);
+        pt.put(&quot;max-progress&quot;, max_progress);
+        ptree cracked;
+        for(auto&amp;amp; crackedPass: crackedPasswords ){
+            ptree pass;
+            pass.put(&quot;pass&quot;,crackedPass);
+            pass.put(&quot;md5&quot;,md5(crackedPass));
+            cracked.push_back(std::make_pair(&quot;&quot;,pass));
+        }
+
+        pt.add_child(&quot;cracked-passwords&quot;,cracked);
+
+        std::ostringstream osbuf;
+        write_json (osbuf, pt, false);
+
+        strcpy(buf, osbuf.str().c_str());
+    }
+
+
+    sendto(sockfd, buf, strlen(buf), 0, their_addr, addr_len);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;on_message implementation&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see I need to implement brute force logic, but I wrote a blog post how to &lt;a href=&quot;http://albert.guru/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html&quot;&gt;easely create multifunctional enumerator&lt;/a&gt;, we need just copy the last source code from &lt;a href=&quot;http://albert.guru/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html&quot;&gt;this page&lt;/a&gt; and include it into the project.&lt;/p&gt;
+
+&lt;p&gt;After that we need to add logic for handling command &lt;code class=&quot;highlighter-rouge&quot;&gt;start-bruteforce&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+auto enumerator = Enumerations::Enumerator();
+
+...
+else if(command == &quot;start-bruteforce&quot;){
+    max_progress = 1;
+    int counter = 0;
+    BOOST_FOREACH(const ptree::value_type&amp;amp; child,
+                  messageObj.get_child(&quot;ranges&quot;)) {
+                    char begin = child.second.get&amp;lt;char&amp;gt;(&quot;begin&quot;);
+
+                    char end = child.second.get&amp;lt;char&amp;gt;(&quot;end&quot;);
+
+                    enumerator.addEnumeration(std::to_string(keyLenght),Enumerations::Enumeration&amp;lt;char&amp;gt;(end, begin, 1));
+
+                    max_progress *= (end - begin + 1);
+                    keyLenght++;
+                }
+    sprintf(buf, &quot;starting, total count : %lld&quot;, max_progress);
+}
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;And at the end we need to add logic into computation function:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;chrono&amp;gt;
+#include &amp;lt;thread&amp;gt;
+
+bool start = false;
+void calcFunc(void*){
+
+    while(!start){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::string pass;
+    pass.reserve(keyLenght);
+    enumerator.enumerate([&amp;amp;pass](Enumerations::EnumerationMap enumerationMap){
+
+        for(int i=0;i&amp;lt;keyLenght;i++){
+            pass[i] = enumerationMap.get&amp;lt;char&amp;gt;(std::to_string(i));
+        }
+        if(md5Passwords.find(md5(pass)) != md5Passwords.end()){
+            crackedPasswords.push_back(pass);
+            md5Passwords.erase(md5(pass));
+        }
+        curr_progress++;
+
+    });
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;The full working code you can find &lt;a href=&quot;https://github.com/albertaleksieiev/sluster/tree/master/example/md5&quot;&gt;here&lt;/a&gt;. And the last step we need to add encoded passwords to brute force attack, in current case I use dictionary length of 6, only with allowed character ‘a’ - ‘z’, it’s really simple case, in a real project you will have complicated passwords. In our case, we need to enumerate &lt;code class=&quot;highlighter-rouge&quot;&gt;26^6 = 308.9M&lt;/code&gt; passwords. After launching the server on tmux session &lt;code class=&quot;highlighter-rouge&quot;&gt;cmake ./;make;./BruteForceServer&lt;/code&gt; we need to add passwords, and start brute force!&lt;/p&gt;
+
+&lt;h5 id=&quot;adding-passwords&quot;&gt;Adding passwords&lt;/h5&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;add&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;passwords&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;c7ded9f87b961a4da4cde26f8c9b5573&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;3d4ae0ea237537d3dfced250f221b5a8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;6f2d656486e9d69ae7832841d5f46068&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;15c2e9950c8774af70928f34e4ba6f77&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;dc9cd480f121ce65df38724756e59c58&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ffa4a945137da6625e38190ae30a226d&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;b3fe4e3dc342719fd616fc047032a264&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;fbfbc08ff787f8664898003f60744374&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;d45a132eb640f69cfca5239b8141fe25&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;eeed4a2691eb491c84f34f6c8d164cbb&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;4f97e25fc286605b7a1ee21ca2ed2e9c&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;89cc49cec6e4a66ee0b472da34cbe601&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;da1f66098f1c95680d6001140aebf0fc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;02eba1c2c6f3b5f8cd41ad17446558e9&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;c1f41ffb2e427d8ee2ab7f1707776abb&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;4e1f1bfe5c486e88b74abd5a7309eb2a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;5b8aa9f637c4afb1c49fb2fb3d1e89e6&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;6cb175ed60218e7654a927edf37a28fe&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;7262d17af60d2670c2052fb5e54f69c1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;d43745fc5287f325833052931cbe0133&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;b8e18becbd0642d96472cd91127bc213&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;cccf18341e6b165baeab43c5451fdcc3&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ecdcae459a040da1447555fe558054cc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;9f8a85fbb2bb262b5f9d6ec49129c803&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;f5dcd3e3676df8eee99534db3c312853&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;cdccb7f7a14e8614787b14732095e03b&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;39d6fa8e45c910c3f30a2ad65abb4edd&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;be140e890924f86d1168aba9d372786c&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;eca36a815e5c47c80967cad37c6fecd5&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;b57b8de9eab75a9b8c189f477379c428&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;e467e62cf7e9d28de95aa8801be649a4&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;d24d12e45da8d598db31dbbfd9133251&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0e77ba4bc050eeb5a7fb4cead3c3e9ba&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a81aa845275423a39ba0a549fa51cda4&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;847e8dc147c28fffac9f79f637626283&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;698d9a6a37bafb02cbcb4a42d16a647b&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;bc706bbbcd05b18791353c345febeb1f&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;39e8802d9511eb72c01bdced2873bbe2&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;8a618abcd652a005cd3d3d3423979248&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;d13fb0206784235405dd30c331c979ce&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;50dc4f40caa99044fcb2b15d35937f01&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;9b6e6c56f6cc83ce4c43ed325050f6d7&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;4b84d7da40337d8ff4a028714258ddca&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;f021758f2787c4d94f41c97fc256999d&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2e0f67cd2598f15a936278947eefd851&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ebce9a90a3a81efb15574ccf7e894420&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;feebbfd618dc8ee2003da2bed6144d17&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;4d1030ee7ebc0416d3aa25958658ee2e&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;9c06d0f94c69e80a719b883472cf7aa1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;e11da07c8a2845e4ff437cedf1f511fe&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;h5 id=&quot;start-bruteforce&quot;&gt;Start bruteforce&lt;/h5&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;start-bruteforce&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;ranges&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:[{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;begin&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;end&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h5 id=&quot;get-status&quot;&gt;Get status&lt;/h5&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;status&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;If you will have a more complicated case you can split all possible encoded passwords or enumeration on nodes. For example, if we have 26 nodes(for simplification), we send on each node first letter, and nodes enumerate on dictionary length of &lt;code class=&quot;highlighter-rouge&quot;&gt;lenght - 1&lt;/code&gt;, and append received a letter in the first position.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/80ZNZSV.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After 30 minutes I crack 26 of 50 passwords only use 1 node. 
+&lt;img src=&quot;http://i.imgur.com/tFjY14B.png&quot; alt=&quot;result&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Thanks for your reading! All code available &lt;a href=&quot;https://github.com/albertaleksieiev/sluster&quot;&gt;here&lt;/a&gt;. I hope it will helpful for you!&lt;/p&gt;</content><author><name></name></author><summary type="html">Cluster computing</summary></entry><entry><title type="html">Playing around with WebAssembly</title><link href="/cpp/2017/05/10/playing-around-with-webassembly.html" rel="alternate" type="text/html" title="Playing around with WebAssembly" /><published>2017-05-10T00:00:00+03:00</published><updated>2017-05-10T00:00:00+03:00</updated><id>/cpp/2017/05/10/playing-around-with-webassembly</id><content type="html" xml:base="/cpp/2017/05/10/playing-around-with-webassembly.html">&lt;p&gt;WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for &lt;em&gt;wasm&lt;/em&gt; is compilation C/C++ code, but also other languages are supported such as &lt;a href=&quot;https://en.wikipedia.org/wiki/Rust_programming_language&quot;&gt;Rust&lt;/a&gt;. Wasm allows run code faster and efficient, thanks to &lt;a href=&quot;https://en.wikipedia.org/wiki/Stack_machine&quot;&gt;stack machine&lt;/a&gt;. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!&lt;/p&gt;
 
 &lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/MaJCfdmr9Wg&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
 
@@ -36,9 +603,8 @@
 &lt;p&gt;A full list of wasm use cases you can find &lt;a href=&quot;https://github.com/WebAssembly/design/blob/master/UseCases.md&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;demos&quot;&gt;Demo’s&lt;/h3&gt;
-
 &lt;h4 id=&quot;wasm&quot;&gt;Wasm&lt;/h4&gt;
-&lt;p&gt;OOn main wasm website, you can find Unity game &lt;a href=&quot;http://webassembly.org/demo/&quot;&gt;‘Tanks’&lt;/a&gt; which ported to wasm.
+&lt;p&gt;On the main wasm website, you can find Unity game &lt;a href=&quot;http://webassembly.org/demo/&quot;&gt;‘Tanks’&lt;/a&gt; which ported to wasm.
 &lt;img src=&quot;http://i.imgur.com/YMpbScY.png&quot; alt=&quot;Tanks&quot; /&gt;
  Also, I found &lt;a href=&quot;https://s3.amazonaws.com/mozilla-games/ZenGarden/EpicZenGarden.html&quot;&gt;EpicZenGarder&lt;/a&gt;. I recommend to you run it on latest Firefox version. 
 &lt;img src=&quot;http://i.imgur.com/rFNkWko.jpg&quot; alt=&quot;EpicZenGarden&quot; /&gt;&lt;/p&gt;
@@ -330,7 +896,7 @@ end&lt;/pre&gt;&lt;/td&gt;
 
 &lt;p&gt;On the first line &lt;code class=&quot;highlighter-rouge&quot;&gt;get_local 0&lt;/code&gt; get the local variable by index 0, &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.const 0&lt;/code&gt; - create constant variable with value 0, &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.eq&lt;/code&gt; - checking last two values in the stack( the result of evaluation &lt;code class=&quot;highlighter-rouge&quot;&gt;get_local 0&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;i64.const 0&lt;/code&gt;), and put the result in a stack. Condition line if: &lt;code class=&quot;highlighter-rouge&quot;&gt;if i64&lt;/code&gt; - popping a value from the stack and checking value, if a condition is true pushing in the stack value 1, otherwise going to line 7. Pushing values into the stack on line 7-9, making subtraction, &lt;code class=&quot;highlighter-rouge&quot;&gt;call 0&lt;/code&gt; calls function by index 0 and put the result of the evaluation in the stack. Line 12 multiply &lt;code class=&quot;highlighter-rouge&quot;&gt;call 0&lt;/code&gt; and n. And at end of the function, we return the result.&lt;/p&gt;
 
-&lt;p&gt;In the next blog post, we will dive into webassembly code,and run interesting benchmarks.&lt;/p&gt;</content><author><name></name></author><summary type="html">WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for wasm is compilation C/C++ code, but also other languages are supported such as Rust. Wasm allows run code faster and efficient, thanks to wasm code is stack machine. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!</summary></entry><entry><title type="html">Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)</title><link href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html" rel="alternate" type="text/html" title="Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates (Part 0)" /><published>2017-04-26T00:00:00-04:00</published><updated>2017-04-26T00:00:00-04:00</updated><id>/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor</id><content type="html" xml:base="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">&lt;h2 id=&quot;initializer_list&quot;&gt;Initializer_list&lt;/h2&gt;
+&lt;p&gt;In the next blog post, we will dive into webassembly code,and run interesting benchmarks.&lt;/p&gt;</content><author><name></name></author><summary type="html">WebAssembly aka wasm is an efficient low-level bytecode format for compilation to the web browsers, initial aim for wasm is compilation C/C++ code, but also other languages are supported such as Rust. Wasm allows run code faster and efficient, thanks to stack machine. Wasm can be interpreted as the game changer for the web, which compiles C++/C into byte code and it can be run with near-native performance, it’s amazing!</summary></entry><entry><title type="html">Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates</title><link href="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html" rel="alternate" type="text/html" title="Road to tree style functional language with C++{11} initializer list constructor, move constructor and variadic templates" /><published>2017-04-26T00:00:00+03:00</published><updated>2017-04-26T00:00:00+03:00</updated><id>/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor</id><content type="html" xml:base="/cpp/2017/04/26/designing-and-implementation-tree-style-functional-language-and-c11-initializer-list-constructor.html">&lt;h2 id=&quot;initializer_list&quot;&gt;Initializer_list&lt;/h2&gt;
 &lt;p&gt;C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list&lt;T&gt;](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.&lt;/T&gt;&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//arr is std::initializer_list&amp;lt;int&amp;gt;
@@ -791,7 +1357,7 @@ int main(){
 std::cout&amp;lt;&amp;lt;Fib()&amp;lt;&amp;lt;std::endl;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
-&lt;p&gt;We create an object function for calculation &lt;em&gt;fibonacci number&lt;/em&gt;, this object/function has a name, input arguments, and body. In the body, we define variables, makes some calculation, return value which depends on some condition or returns result of recursion call. Actually, by using this approach, we can implement more coolest algorithms like quick sort, or declare recursive data structures like trees. Yes, we will try to implement this function in next blog post!&lt;/p&gt;</content><author><name></name></author><summary type="html">Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</summary></entry><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00-04:00</published><updated>2017-04-18T00:00:00-04:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
+&lt;p&gt;We create an object function for calculation &lt;em&gt;fibonacci number&lt;/em&gt;, this object/function has a name, input arguments, and body. In the body, we define variables, makes some calculation, return value which depends on some condition or returns result of recursion call. Actually, by using this approach, we can implement more coolest algorithms like quick sort, or declare recursive data structures like trees. Yes, we will try to implement this function in next blog post!&lt;/p&gt;</content><author><name></name></author><summary type="html">Initializer_list C++{11} bring into old c++ world a lot of exciting new features! One of this features is [std::initializer_list](http://en.cppreference.com/w/cpp/utility/initializer_list). This new data structure is just a lightweight proxy object that provides access to the array of objects of type `const T`, in few words it's just array but not std::array. Using this data structure with keyword `auto` so easy and cool like drive a supercar.</summary></entry><entry><title type="html">Multifunctional enumerator, std::any{C++17} and templates.</title><link href="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html" rel="alternate" type="text/html" title="Multifunctional enumerator, std::any{C++17} and templates." /><published>2017-04-18T00:00:00+03:00</published><updated>2017-04-18T00:00:00+03:00</updated><id>/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates</id><content type="html" xml:base="/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">&lt;h1 id=&quot;multifunctional-enumerator-stdanyc17-and-templates&quot;&gt;Multifunctional enumerator, std::any{C++17} and templates.&lt;/h1&gt;
 
 &lt;p&gt;In many cases, you will wonder to enumerate all possible candidates in the dictionary, by the way, it’s using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Brute-force_search&quot;&gt;Brute-force search&lt;/a&gt;. Also, enumerations can be using in &lt;a href=&quot;https://en.wikipedia.org/wiki/Permutation&quot;&gt;permutation of objects&lt;/a&gt;. But first things first.&lt;/p&gt;
 
@@ -1169,7 +1735,7 @@ int main(){
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
-&lt;p&gt;That is! We can use this enumerator in many cases, like for permutation, brute-forces, fill databases and list with fake data, generation random data, etc…&lt;/p&gt;</content><author><name></name></author><summary type="html">Multifunctional enumerator, std::any{C++17} and templates.</summary></entry><entry><title type="html">Metaprogramming and Constexpr c++{14}</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Metaprogramming and Constexpr c++{14} " /><published>2017-04-14T00:00:00-04:00</published><updated>2017-04-14T00:00:00-04:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
+&lt;p&gt;That is! We can use this enumerator in many cases, like for permutation, brute-forces, fill databases and list with fake data, generation random data, etc…&lt;/p&gt;</content><author><name></name></author><summary type="html">Multifunctional enumerator, std::any{C++17} and templates.</summary></entry><entry><title type="html">Metaprogramming and Constexpr c++{14}</title><link href="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html" rel="alternate" type="text/html" title="Metaprogramming and Constexpr c++{14} " /><published>2017-04-14T00:00:00+03:00</published><updated>2017-04-14T00:00:00+03:00</updated><id>/cpp/2017/04/14/constexpr-c14-and-metprogramming</id><content type="html" xml:base="/cpp/2017/04/14/constexpr-c14-and-metprogramming.html">&lt;p&gt;One guy said ‘if there were award for the most confusing word in C++11, constexpr would probably win it.’, and he was be correct. So what the difference between &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; and regular &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt;? &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; can be used in 2 cases - apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to object and apply &lt;code class=&quot;highlighter-rouge&quot;&gt;constexpr&lt;/code&gt; to function. 
 Let’s look both cases:&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Apply to object&lt;/strong&gt;&lt;/p&gt;

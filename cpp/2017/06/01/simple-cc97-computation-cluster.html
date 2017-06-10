@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Simple C/C++ computation cluster</title>
+  <meta name="description" content="Cluster computing">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="/cpp/2017/06/01/simple-cc97-computation-cluster.html">
+  <link rel="alternate" type="application/rss+xml" title="Albert blog" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Albert blog</a>
+
+    <nav class="site-nav">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/zpy">ZPy</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Simple C/C++ computation cluster</h1>
+    <p class="post-meta"><time datetime="2017-06-01T00:00:00+03:00" itemprop="datePublished">Jun 1, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h4 id="cluster-computing">Cluster computing</h4>
+<p><img src="https://qph.ec.quoracdn.net/main-qimg-f78e88e58d74f6a67092381fc56b6baa-c" alt="Computer cluster" /></p>
+
+<p>A <a href="https://en.wikipedia.org/wiki/Computer_cluster">Cluster computing</a> is set of computers(nodes) which working together, it can be interpreted as single system where each computer is processor. All of computers working on the same task and this bunch of computers connected in one network. One node can share data to another node, and master node can share data to slave nodes.</p>
+
+<p>Computer cluster usually used to increase performance and availability over than a single computer. It can be used in many cases, started from web-service support to high-performance computation. Usually each node run own instance of the operating system, but nodes can use the same operating system and use some setups(like <a href="http://svn.oscar.openclustergroup.org/trac/oscar">OSCAR</a>). Also for increasing performance computing, clusters using parallel computing such as <a href="https://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</a>.</p>
+
+<h4 id="beowulf-cluster">Beowulf cluster</h4>
+<p><img src="http://www.cs.mtu.edu/beowulf/misc/cluster.jpg" alt="Beowulf cluster" /></p>
+
+<p>One of the most popular cluster is <a href="http://www.beowulf.org/">Beowulf cluster</a>. Beowulf cluster is Open Source scalable performance cluster, on a small <a href="https://en.wikipedia.org/wiki/Local_area_network">LAN</a>. Beowulf, it’s kind of software recipe, what software you need to use to build cluster. They include <a href="https://en.wikipedia.org/wiki/OpenMPI">OpenMPI</a> or <a href="https://en.wikipedia.org/wiki/MPICH">MPICH</a>, <a href="https://en.wikipedia.org/wiki/Parallel_Virtual_Machine">PVM</a>, Linux kernel and many <a href="http://www.beowulf.org/overview/faq.html#3">others</a>. It’s can be interpreted as ‘build computer cluster at home’, that allow building a hight-performance cluster on cheap PC hardware.</p>
+
+<h4 id="our-cluster">Our ‘cluster’</h4>
+
+<p><img src="http://i.imgur.com/RbEEHFc.png" alt="Simple cluster" /></p>
+
+<p>In this topic, I will show you simple version of cluster computing without sharing information between nodes, and without any cluster OS or cluster software. For simplification, just imagine you have a lot of different remote computers in different regions, and every computer computes some function <code class="highlighter-rouge">f(x)</code>. Function <code class="highlighter-rouge">f</code> and parameter <code class="highlighter-rouge">x</code> can be the same on every computer or depends on the computer.</p>
+
+<p>It will be a simple C++ code which will be run on a computer, and for communication, we will use <a href="https://en.wikipedia.org/wiki/User_Datagram_Protocol">UDP</a> protocol. It allows to us greatly simplify integrating computation cluster, we just need include header, implement response on message(receive a new parameter for computation, get intermediate results, etc…) and implement our computation function.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#include "socket.h"
+
+long long val = 1000;
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+    sendto(sockfd, &amp;val, sizeof(val), 0, their_addr, addr_len);
+}
+void calcFunc(void*){
+    while(true){
+        val++;
+        val%=10;
+    }
+}
+int main(){
+    CalculationSocketManager calculationSocketManager("4950",on_message); //Run on port 4950
+
+    calculationSocketManager.start(calcFunc);
+}
+</code></pre>
+</div>
+
+<h3 id="implementation">Implementation</h3>
+
+<p>Instead of <a href="https://en.wikipedia.org/wiki/Transmission_Control_Protocol">TCP</a> we will use <a href="https://en.wikipedia.org/wiki/User_Datagram_Protocol">UDP</a>, because we do not need continuous connection. For implementation we will use <code class="highlighter-rouge">&lt;sys/socket.h&gt;</code> header, it available for *nix machines, I run it on MacOS machine. If you are using Windows machine please include <code class="highlighter-rouge">&lt;winsock2.h&gt;</code> header, it describes <a href="https://stackoverflow.com/a/4642169">here</a>.</p>
+
+<p>Firstly we need to create and bind UDP socket.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>int sockfd;
+struct addrinfo hints, *servinfo, *p;
+
+int rv;
+//Convert port to address info
+if ((rv = getaddrinfo(NULL, this-&gt;port, &amp;hints, &amp;servinfo)) != 0) {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    return 1;
+}
+
+// loop through all the results and bind to the first we can
+for(p = servinfo; p != NULL; p = p-&gt;ai_next) {
+    //Create
+    if ((sockfd = socket(p-&gt;ai_family, p-&gt;ai_socktype,
+                         p-&gt;ai_protocol)) == -1) {
+        continue;
+    }
+    //Bind
+	if (bind(sockfd, p-&gt;ai_addr, p-&gt;ai_addrlen) == -1) {
+        close(sockfd);
+        continue;
+    }
+    break;
+}
+if (p == NULL) {
+    fprintf(stderr, "Cannot create/bind socket!\n");
+    return 2;
+}
+</code></pre>
+</div>
+<p>After that, we need to receive a message from the socket.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code> while(true) {
+    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0,
+                             (struct sockaddr *) &amp;their_addr, &amp;addr_len)) == -1) {
+        perror("recvfrom");
+        exit(1);
+    }
+
+	//Function pointer
+    onmessage(sockfd,buf,(struct sockaddr *) &amp;their_addr, (socklen_t) addr_len);
+
+    buf[numbytes] = '\0';
+}
+</code></pre>
+</div>
+<p><code class="highlighter-rouge">onmessage</code> is function pointer aka callback, which we need to implement. In our case, it will be a response to master node request, for example, send current intermediate result and it will depend on the message which will be received.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef void(*onmessage_callback)(int, char*, struct sockaddr *, socklen_t);
+
+onmessage_callback onmessage;
+
+...
+
+char buf[2048];
+
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+    float progress = 0.12;
+    int val = 1011;
+    int n = sprintf(buf,"%d,%f",val, progress);
+    sendto(sockfd, buf, n, 0, their_addr, addr_len);
+}
+
+onmessage = on_message;
+</code></pre>
+</div>
+<p>Here we just send a message with 2 values each time, when we receive a request. But in working example, we will send current calculated value and current progress.</p>
+
+<p>As we can see above we are waiting for the incoming message when we are waiting, current thread is <strong>blocked</strong>! So we need to create tread and receive a message in another thread. But firstly we need to create a class with all code above.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;netdb.h&gt;
+
+#include &lt;pthread.h&gt;
+
+#ifndef SERVER_SOCKET_H
+#define SERVER_SOCKET_H
+
+
+typedef void(*onmessage_callback)(int, char*, struct sockaddr *, socklen_t);
+
+class ServerSocket{
+    char* port;
+public:
+    onmessage_callback onmessage;
+    ServerSocket(const char* port, onmessage_callback onmessage){
+        this-&gt;port = new char[strlen(port)];
+        strcpy(this-&gt;port, port);
+
+        this-&gt;onmessage = onmessage;
+    }
+    ~ServerSocket(){
+        delete this-&gt;port;
+    }
+
+    int start(){
+        int sockfd;
+        struct addrinfo hints, *servinfo, *p;
+        int rv;
+        int numbytes;
+        struct sockaddr_storage their_addr;
+        int MAXBUFLEN = 128;
+
+        char buf[MAXBUFLEN];
+        socklen_t addr_len;
+        char s[INET6_ADDRSTRLEN];
+
+        memset(&amp;hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_flags = AI_PASSIVE; // use my IP
+
+        if ((rv = getaddrinfo(NULL, this-&gt;port, &amp;hints, &amp;servinfo)) != 0) {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+            return 1;
+        }
+
+        // loop through all the results and bind to the first we can
+        for(p = servinfo; p != NULL; p = p-&gt;ai_next) {
+            if ((sockfd = socket(p-&gt;ai_family, p-&gt;ai_socktype,
+                                 p-&gt;ai_protocol)) == -1) {
+                perror("listener: socket");
+                continue;
+            }
+
+            if (bind(sockfd, p-&gt;ai_addr, p-&gt;ai_addrlen) == -1) {
+                close(sockfd);
+                perror("listener: bind");
+                continue;
+            }
+
+            break;
+        }
+
+        if (p == NULL) {
+            fprintf(stderr, "listener: failed to bind socket\n");
+            return 2;
+        }
+
+        freeaddrinfo(servinfo);
+
+
+        addr_len = sizeof their_addr;
+
+        while(true) {
+            if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0,
+                                     (struct sockaddr *) &amp;their_addr, &amp;addr_len)) == -1) {
+                perror("recvfrom");
+                exit(1);
+            }
+
+
+            onmessage(sockfd,buf,(struct sockaddr *) &amp;their_addr, (socklen_t) addr_len);
+
+            buf[numbytes] = '\0';
+        }
+        close(sockfd);
+    }
+};
+#endif
+</code></pre>
+</div>
+<p><strong><em>File sluster.h</em></strong></p>
+
+<p>For creation new thread we will use <a href="https://en.wikipedia.org/wiki/POSIX_Threads">phtreads</a>. It really simple to implement thread with pthreads, also you use <a href="http://en.cppreference.com/w/cpp/thread/thread">C++11 std::thread</a>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>void* socket_func(void* server_socket){
+    ServerSocket* serverSocket = (ServerSocket*)server_socket;
+    serverSocket-&gt;start();
+}
+
+
+pthread_t socket_thread;
+ServerSocket serverSocket("4950", &amp;onMessage);
+
+if(pthread_create(&amp;socket_thread, NULL,socket_func, serverSocket)) {
+    fprintf(stderr, "Error creating socket thread\n");
+    return 1;
+} 
+</code></pre>
+</div>
+
+<p>The thread will be started after creation, and you need to implement <code class="highlighter-rouge">onMessage</code> function. Let’s wrap it into class.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>...
+
+
+class CalculationSocketManager{
+    ServerSocket* serverSocket;
+    pthread_t socket_thread;
+
+public:
+    CalculationSocketManager(char* port, onmessage_callback onmessage){
+        serverSocket = new ServerSocket(port, onmessage);
+    }
+    ~CalculationSocketManager(){
+        delete serverSocket;
+    }
+    int start(void(*calc_func)(void*) ){
+
+
+        if(pthread_create(&amp;socket_thread, NULL,socket_func, this-&gt;serverSocket)) {
+            fprintf(stderr, "Error creating socket thread\n");
+            return 1;
+        }
+        //Start calculation
+        calc_func(NULL);
+    }
+};
+</code></pre>
+</div>
+<p><strong><em>File sluster.h</em></strong></p>
+
+<p>Now we can try to test it :) We will calculate Fibonacci number without any performance modification starting from the number 38.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#include "sluster.h"
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+
+std::vector&lt;std::pair&lt;int,long long&gt;&gt; results;
+int value = 38;
+char buf[16394];
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+
+    int offset = 0;
+    for(auto&amp; p: results){
+        offset += sprintf(buf+offset,"%d,%lld\n",p.first, p.second);
+    }
+
+    sendto(sockfd, buf, offset, 0, their_addr, addr_len);
+}
+
+long long fib(int n){
+    if(n &lt; 2){
+        return 1;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+void calcFunc(void*){
+    while(true) {
+        results.push_back({value, fib(value)});
+        value++;
+    }
+}
+
+
+int main(){
+    CalculationSocketManager calculationSocketManager("4950",on_message);
+
+    calculationSocketManager.start(calcFunc);
+}
+</code></pre>
+</div>
+<p><strong><em>File main.cpp</em></strong></p>
+
+<p>For sending requests we can write a client or use <a href="https://en.wikipedia.org/wiki/Netcat">Netcat</a>. Here we use netcat.
+<img src="http://i.imgur.com/J2Dhtov.png" alt="netcat" />
+Woho, it works great and it ready to use. Let’s try to deploy it.</p>
+
+<h3 id="deploying">Deploying</h3>
+
+<p>Usually, I use AWS, but now I will use Google Cloud. You can see tutorial how to create google cloud instance <a href="https://cloud.google.com/compute/docs/quickstart-linux">here</a>. After login into the remote machine, clone <a href="https://github.com/albertaleksieiev/sluster"><code class="highlighter-rouge">sluster</code></a> repo, compile and run.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&gt; git clone https://github.com/albertaleksieiev/sluster.git
+&gt; cd sluster/example 
+&gt; g++ fib.cpp -pthread -o main.o
+&gt; ./main.o
+starting UDP server on port 4950
+</code></pre>
+</div>
+
+<p>After that, you need to open port <code class="highlighter-rouge">4950</code> in your firewall, in Google cloud you need to go to your app dashboard and type in search input <code class="highlighter-rouge">Networking</code> and select it:
+<img src="http://i.imgur.com/eYV4Cqd.png" alt="gcp" />
+Go to <code class="highlighter-rouge">Firewall rules</code>, click <code class="highlighter-rouge">create firewall rule</code> and fill fields:</p>
+
+<ul>
+  <li>Name: any name for this rule</li>
+  <li>Source IP ranges: <code class="highlighter-rouge">0.0.0.0/0</code> - for any IP, or type your IP. Trafic only allowed with this IP.</li>
+  <li>Protocols and Ports: <code class="highlighter-rouge">udp:4950</code> - allow 4950 port for UDP.
+<img src="http://i.imgur.com/2mkcd3T.png" alt="Allowing ports" /></li>
+</ul>
+
+<p>And now I can connect to remote connection and get intermediate results, for calculation Fibonacci num. We just need run from local machine netcat but instead <strong><em>localhost</em></strong> enter remote machine IP address. And we need to run our server as a daemon because if we close ssh connection, our serve will be closed too. I use <a href="https://en.wikipedia.org/wiki/Tmux">tmux</a>, but you can use <a href="https://en.wikipedia.org/wiki/GNU_Screen">screen</a>.</p>
+
+<p>Ok, firstly we shut down our server if it runs on the remote machine. After that run new <code class="highlighter-rouge">tmux</code> session, and run a server from this session.</p>
+
+<p><strong>Run server on remote machine</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>&gt; tmux
+&gt; g++ fib.cpp -pthread -o main.o
+&gt; ./main.o
+starting UDP server on port 4950
+</code></pre>
+</div>
+<p><strong>Get results, runned from local machine</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>&gt; nc -u 11.111.11.111 4950
+&gt; 
+38,63245986
+39,102334155
+40,165580141
+41,267914296
+42,433494437
+43,701408733
+44,1134903170
+45,1836311903
+46,2971215073
+47,4807526976
+48,7778742049
+</code></pre>
+</div>
+<p><strong><em>Change <code class="highlighter-rouge">11.111.11.111</code> to your remote machine IP address.</em></strong></p>
+
+<h3 id="md5-passwords">MD5 passwords</h3>
+
+<p>Cool it’s really easy to integrate, and it’s working! Just <code class="highlighter-rouge">clone repo</code> -&gt; <code class="highlighter-rouge">#include "sluster.h"</code> -&gt; <code class="highlighter-rouge">implement 2 functions</code> -&gt; <code class="highlighter-rouge">open ports</code>. But now let’s try to implement something interesting, like bruteforce attack to md5 passwords :).</p>
+
+<p>For simplification, we will have a bunch of encoded in md5 passwords. But firstly wee need to implement this in our handle message function. All data will be passed in JSON format, we will use <a href="http://www.boost.org/doc/libs/1_55_0/doc/html/boost_propertytree/parsers.html">Boost Property Tree</a>, we will have 3 functions.</p>
+
+<ul>
+  <li>Add encoded passwords. <code class="highlighter-rouge"><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"add"</span><span class="p">,</span><span class="w"> </span><span class="nt">"passwords"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"32CFE6C19200B67AFB7C3D0E1C43EADB"</span><span class="p">,</span><span class="s2">"332FE6C19200B67AFB7C3D0E1C43EADB"</span><span class="p">]}</span></code></li>
+  <li>Start bruteforcing, we will pass all possible ranges for passwords. <code class="highlighter-rouge"><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="s2">"start-bruteforce"</span><span class="p">,</span><span class="w"> </span><span class="nt">"ranges"</span><span class="p">:[{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"1"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"9"</span><span class="p">}]}</span></code> - current message will try all possible lowercase letters in first position with all possible digits in second position, all possible number of combination = <code class="highlighter-rouge">26 * 9 = 234</code>.</li>
+  <li>Status returns cracked passwords, and current progress. Request message : <code class="highlighter-rouge"><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="s2">"status"</span><span class="p">}</span></code>, responce message :</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="w">
+	</span><span class="err">'current-progress':10,</span><span class="w">
+	</span><span class="err">'max-progress':'234',</span><span class="w"> 
+	</span><span class="err">'cracked-passwords':[</span><span class="w">
+		</span><span class="err">{</span><span class="w">
+			</span><span class="err">'pass':'a5','md5':'32CFE6C19200B67AFB7C3D0E1C43EADB'</span><span class="w">
+		</span><span class="p">}</span><span class="w">
+	</span><span class="err">]</span><span class="w">
+</span><span class="err">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<h4 id="implementation-1">Implementation</h4>
+<p>Firstly we need to implement a md5 function, really good source <a href="http://www.zedwood.com/article/cpp-md5-function">here</a> copy and paste it into a header file and include this header <code class="highlighter-rouge">#include "md5.h"</code>, the working code you can find <a href="https://github.com/albertaleksieiev/sluster/blob/master/example/md5/md5.h">here</a>.</p>
+
+<p>After that we need <a href="http://www.boost.org/doc/libs/1_61_0/doc/html/property_tree.html">Boost.PropertyTree</a> package.</p>
+
+<p>I already install boost on my PC, so you need to install it too. I use CMake in my project, so I need to add dependencies into <code class="highlighter-rouge">CMakeLists.txt</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>...
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.61.0)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    add_executable(SocketClient socket/client.cpp)
+    target_link_libraries(SocketClient ${Boost_LIBRARIES})
+endif()
+...
+</code></pre>
+</div>
+<p><strong><em>CMakeLists.txt</em></strong></p>
+
+<p>After that I need to implement message handler function:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>std::unordered_set&lt;std::string&gt; md5Passwords;
+std::vector&lt;std::string&gt; crackedPasswords;
+long long curr_progress = 0;
+long long max_progress = 0;
+long long keyLenght = 0;
+
+
+#include &lt;boost/property_tree/ptree.hpp&gt;
+#include &lt;boost/property_tree/json_parser.hpp&gt;
+
+#include &lt;boost/foreach.hpp&gt;
+template &lt;typename T&gt;
+std::vector&lt;T&gt; as_vector(boost::property_tree::ptree const&amp; pt, boost::property_tree::ptree::key_type const&amp; key)
+{
+    std::vector&lt;T&gt; r;
+    for (auto&amp; item : pt.get_child(key))
+        r.push_back(item.second.get_value&lt;T&gt;());
+    return r;
+}
+
+void on_message(int sockfd, char* msg, struct sockaddr *their_addr, socklen_t addr_len){
+
+    using boost::property_tree::ptree;
+    using boost::property_tree::read_json;
+    using boost::property_tree::write_json;
+
+    ptree messageObj;
+    std::istringstream is (msg);
+    read_json (is, messageObj);
+
+
+    std::string command = messageObj.get&lt;std::string&gt; ("command");
+    if(command == "add"){
+        for(auto md5: as_vector&lt;std::string&gt;(messageObj,"passwords")){
+            md5Passwords.push_back(md5);
+        }
+        sprintf(buf, "added %d passwords", (int)md5Passwords.size());
+    }else if(command == "start-bruteforce"){
+        BOOST_FOREACH(const ptree::value_type&amp; child,
+                      messageObj.get_child("ranges")) {
+                        char begin = child.second.get&lt;char&gt;("begin");
+
+                        char end = child.second.get&lt;char&gt;("end");
+                        std::cout&lt;&lt;begin&lt;&lt;' '&lt;&lt;end&lt;&lt;std::endl;
+                        //Add logic
+                    }
+        sprintf(buf, "starting");
+    }else if(command == "status"){
+        ptree pt;
+        pt.put("current-progress",curr_progress);
+        pt.put("max-progress", max_progress);
+        ptree cracked;
+        for(auto&amp; crackedPass: crackedPasswords ){
+            ptree pass;
+            pass.put("pass",crackedPass);
+            pass.put("md5",md5(crackedPass));
+            cracked.push_back(std::make_pair("",pass));
+        }
+
+        pt.add_child("cracked-passwords",cracked);
+
+        std::ostringstream osbuf;
+        write_json (osbuf, pt, false);
+
+        strcpy(buf, osbuf.str().c_str());
+    }
+
+
+    sendto(sockfd, buf, strlen(buf), 0, their_addr, addr_len);
+}
+</code></pre>
+</div>
+<p><strong><em>on_message implementation</em></strong></p>
+
+<p>As you can see I need to implement brute force logic, but I wrote a blog post how to <a href="http://albert.guru/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">easely create multifunctional enumerator</a>, we need just copy the last source code from <a href="http://albert.guru/cpp/2017/04/18/multifunctional-enumerator-stdanyc17-and-templates.html">this page</a> and include it into the project.</p>
+
+<p>After that we need to add logic for handling command <code class="highlighter-rouge">start-bruteforce</code>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+auto enumerator = Enumerations::Enumerator();
+
+...
+else if(command == "start-bruteforce"){
+    max_progress = 1;
+    int counter = 0;
+    BOOST_FOREACH(const ptree::value_type&amp; child,
+                  messageObj.get_child("ranges")) {
+                    char begin = child.second.get&lt;char&gt;("begin");
+
+                    char end = child.second.get&lt;char&gt;("end");
+
+                    enumerator.addEnumeration(std::to_string(keyLenght),Enumerations::Enumeration&lt;char&gt;(end, begin, 1));
+
+                    max_progress *= (end - begin + 1);
+                    keyLenght++;
+                }
+    sprintf(buf, "starting, total count : %lld", max_progress);
+}
+...
+</code></pre>
+</div>
+
+<p>And at the end we need to add logic into computation function:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#include &lt;chrono&gt;
+#include &lt;thread&gt;
+
+bool start = false;
+void calcFunc(void*){
+
+    while(!start){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::string pass;
+    pass.reserve(keyLenght);
+    enumerator.enumerate([&amp;pass](Enumerations::EnumerationMap enumerationMap){
+
+        for(int i=0;i&lt;keyLenght;i++){
+            pass[i] = enumerationMap.get&lt;char&gt;(std::to_string(i));
+        }
+        if(md5Passwords.find(md5(pass)) != md5Passwords.end()){
+            crackedPasswords.push_back(pass);
+            md5Passwords.erase(md5(pass));
+        }
+        curr_progress++;
+
+    });
+}
+</code></pre>
+</div>
+<p>The full working code you can find <a href="https://github.com/albertaleksieiev/sluster/tree/master/example/md5">here</a>. And the last step we need to add encoded passwords to brute force attack, in current case I use dictionary length of 6, only with allowed character ‘a’ - ‘z’, it’s really simple case, in a real project you will have complicated passwords. In our case, we need to enumerate <code class="highlighter-rouge">26^6 = 308.9M</code> passwords. After launching the server on tmux session <code class="highlighter-rouge">cmake ./;make;./BruteForceServer</code> we need to add passwords, and start brute force!</p>
+
+<h5 id="adding-passwords">Adding passwords</h5>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"add"</span><span class="p">,</span><span class="w"> </span><span class="nt">"passwords"</span><span class="w"> </span><span class="p">:</span><span class="w">  </span><span class="p">[</span><span class="s2">"c7ded9f87b961a4da4cde26f8c9b5573"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3d4ae0ea237537d3dfced250f221b5a8"</span><span class="p">,</span><span class="w"> </span><span class="s2">"6f2d656486e9d69ae7832841d5f46068"</span><span class="p">,</span><span class="w"> </span><span class="s2">"15c2e9950c8774af70928f34e4ba6f77"</span><span class="p">,</span><span class="w"> </span><span class="s2">"dc9cd480f121ce65df38724756e59c58"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ffa4a945137da6625e38190ae30a226d"</span><span class="p">,</span><span class="w"> </span><span class="s2">"b3fe4e3dc342719fd616fc047032a264"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fbfbc08ff787f8664898003f60744374"</span><span class="p">,</span><span class="w"> </span><span class="s2">"d45a132eb640f69cfca5239b8141fe25"</span><span class="p">,</span><span class="w"> </span><span class="s2">"eeed4a2691eb491c84f34f6c8d164cbb"</span><span class="p">,</span><span class="w"> </span><span class="s2">"4f97e25fc286605b7a1ee21ca2ed2e9c"</span><span class="p">,</span><span class="w"> </span><span class="s2">"89cc49cec6e4a66ee0b472da34cbe601"</span><span class="p">,</span><span class="w"> </span><span class="s2">"da1f66098f1c95680d6001140aebf0fc"</span><span class="p">,</span><span class="w"> </span><span class="s2">"02eba1c2c6f3b5f8cd41ad17446558e9"</span><span class="p">,</span><span class="w"> </span><span class="s2">"c1f41ffb2e427d8ee2ab7f1707776abb"</span><span class="p">,</span><span class="w"> </span><span class="s2">"4e1f1bfe5c486e88b74abd5a7309eb2a"</span><span class="p">,</span><span class="w"> </span><span class="s2">"5b8aa9f637c4afb1c49fb2fb3d1e89e6"</span><span class="p">,</span><span class="w"> </span><span class="s2">"6cb175ed60218e7654a927edf37a28fe"</span><span class="p">,</span><span class="w"> </span><span class="s2">"7262d17af60d2670c2052fb5e54f69c1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"d43745fc5287f325833052931cbe0133"</span><span class="p">,</span><span class="w"> </span><span class="s2">"b8e18becbd0642d96472cd91127bc213"</span><span class="p">,</span><span class="w"> </span><span class="s2">"cccf18341e6b165baeab43c5451fdcc3"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ecdcae459a040da1447555fe558054cc"</span><span class="p">,</span><span class="w"> </span><span class="s2">"9f8a85fbb2bb262b5f9d6ec49129c803"</span><span class="p">,</span><span class="w"> </span><span class="s2">"f5dcd3e3676df8eee99534db3c312853"</span><span class="p">,</span><span class="w"> </span><span class="s2">"cdccb7f7a14e8614787b14732095e03b"</span><span class="p">,</span><span class="w"> </span><span class="s2">"39d6fa8e45c910c3f30a2ad65abb4edd"</span><span class="p">,</span><span class="w"> </span><span class="s2">"be140e890924f86d1168aba9d372786c"</span><span class="p">,</span><span class="w"> </span><span class="s2">"eca36a815e5c47c80967cad37c6fecd5"</span><span class="p">,</span><span class="w"> </span><span class="s2">"b57b8de9eab75a9b8c189f477379c428"</span><span class="p">,</span><span class="w"> </span><span class="s2">"e467e62cf7e9d28de95aa8801be649a4"</span><span class="p">,</span><span class="w"> </span><span class="s2">"d24d12e45da8d598db31dbbfd9133251"</span><span class="p">,</span><span class="w"> </span><span class="s2">"0e77ba4bc050eeb5a7fb4cead3c3e9ba"</span><span class="p">,</span><span class="w"> </span><span class="s2">"a81aa845275423a39ba0a549fa51cda4"</span><span class="p">,</span><span class="w"> </span><span class="s2">"847e8dc147c28fffac9f79f637626283"</span><span class="p">,</span><span class="w"> </span><span class="s2">"698d9a6a37bafb02cbcb4a42d16a647b"</span><span class="p">,</span><span class="w"> </span><span class="s2">"bc706bbbcd05b18791353c345febeb1f"</span><span class="p">,</span><span class="w"> </span><span class="s2">"39e8802d9511eb72c01bdced2873bbe2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"8a618abcd652a005cd3d3d3423979248"</span><span class="p">,</span><span class="w"> </span><span class="s2">"d13fb0206784235405dd30c331c979ce"</span><span class="p">,</span><span class="w"> </span><span class="s2">"50dc4f40caa99044fcb2b15d35937f01"</span><span class="p">,</span><span class="w"> </span><span class="s2">"9b6e6c56f6cc83ce4c43ed325050f6d7"</span><span class="p">,</span><span class="w"> </span><span class="s2">"4b84d7da40337d8ff4a028714258ddca"</span><span class="p">,</span><span class="w"> </span><span class="s2">"f021758f2787c4d94f41c97fc256999d"</span><span class="p">,</span><span class="w"> </span><span class="s2">"2e0f67cd2598f15a936278947eefd851"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ebce9a90a3a81efb15574ccf7e894420"</span><span class="p">,</span><span class="w"> </span><span class="s2">"feebbfd618dc8ee2003da2bed6144d17"</span><span class="p">,</span><span class="w"> </span><span class="s2">"4d1030ee7ebc0416d3aa25958658ee2e"</span><span class="p">,</span><span class="w"> </span><span class="s2">"9c06d0f94c69e80a719b883472cf7aa1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"e11da07c8a2845e4ff437cedf1f511fe"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></code></pre>
+</div>
+<h5 id="start-bruteforce">Start bruteforce</h5>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="s2">"start-bruteforce"</span><span class="p">,</span><span class="w"> </span><span class="nt">"ranges"</span><span class="p">:[{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">},{</span><span class="nt">"begin"</span><span class="p">:</span><span class="s2">"a"</span><span class="p">,</span><span class="nt">"end"</span><span class="p">:</span><span class="s2">"z"</span><span class="p">}]}</span><span class="w">
+</span></code></pre>
+</div>
+
+<h5 id="get-status">Get status</h5>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="nt">"command"</span><span class="p">:</span><span class="s2">"status"</span><span class="p">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>If you will have a more complicated case you can split all possible encoded passwords or enumeration on nodes. For example, if we have 26 nodes(for simplification), we send on each node first letter, and nodes enumerate on dictionary length of <code class="highlighter-rouge">lenght - 1</code>, and append received a letter in the first position.</p>
+
+<p><img src="http://i.imgur.com/80ZNZSV.png" alt="" /></p>
+
+<p>After 30 minutes I crack 26 of 50 passwords only use 1 node. 
+<img src="http://i.imgur.com/tFjY14B.png" alt="result" /></p>
+
+<p>Thanks for your reading! All code available <a href="https://github.com/albertaleksieiev/sluster">here</a>. I hope it will helpful for you!</p>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Albert blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Albert blog
+            
+            </li>
+            
+            <li><a href="mailto:albert.aleksieiev@gmail.com">albert.aleksieiev@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/albertaleksieiev"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">albertaleksieiev</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/albert_keyj"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">albert_keyj</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
