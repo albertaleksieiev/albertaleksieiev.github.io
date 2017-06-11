@@ -399,8 +399,6 @@ end</pre></td>
 
 <p>On the first line <code class="highlighter-rouge">get_local 0</code> get the local variable by index 0, <code class="highlighter-rouge">i64.const 0</code> - create constant variable with value 0, <code class="highlighter-rouge">i64.eq</code> - checking last two values in the stack( the result of evaluation <code class="highlighter-rouge">get_local 0</code> and <code class="highlighter-rouge">i64.const 0</code>), and put the result in a stack. Condition line if: <code class="highlighter-rouge">if i64</code> - popping a value from the stack and checking value, if a condition is true pushing in the stack value 1, otherwise going to line 7. Pushing values into the stack on line 7-9, making subtraction, <code class="highlighter-rouge">call 0</code> calls function by index 0 and put the result of the evaluation in the stack. Line 12 multiply <code class="highlighter-rouge">call 0</code> and n. And at end of the function, we return the result.</p>
 
-<p>In the next blog post, we will dive into webassembly code,and run interesting benchmarks.</p>
-
 
   </div>
 
