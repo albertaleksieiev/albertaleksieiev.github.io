@@ -1,4 +1,209 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-06-22T12:43:05+03:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Simple C/C++ computer cluster</title><link href="/cpp/2017/06/01/simple-cc97-computation-cluster.html" rel="alternate" type="text/html" title="Simple C/C++ computer cluster" /><published>2017-06-01T00:00:00+03:00</published><updated>2017-06-01T00:00:00+03:00</updated><id>/cpp/2017/06/01/simple-cc97-computation-cluster</id><content type="html" xml:base="/cpp/2017/06/01/simple-cc97-computation-cluster.html">&lt;h4 id=&quot;computer-cluster&quot;&gt;Computer cluster&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-06-22T16:22:04+03:00</updated><id>/</id><title type="html">Albert blog</title><subtitle></subtitle><entry><title type="html">Training AI to playing in game for mobile platform</title><link href="/cpp/2017/06/11/training-ai-to-playing-in-game.html" rel="alternate" type="text/html" title="Training AI to playing in game for mobile platform" /><published>2017-06-11T00:00:00+03:00</published><updated>2017-06-11T00:00:00+03:00</updated><id>/cpp/2017/06/11/training-ai-to-playing-in-game</id><content type="html" xml:base="/cpp/2017/06/11/training-ai-to-playing-in-game.html">&lt;h2 id=&quot;intro&quot;&gt;Intro&lt;/h2&gt;
+&lt;p&gt;With the rapig growth of machine learning learning PC to do some actions become more easely. You cat take a look at &lt;a href=&quot;https://openai.com/&quot;&gt;OpenAI&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;For the game I select basketball game &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.noodlecake.bouncyhoops&amp;amp;hl=en&quot;&gt;Bouncy Hoops&lt;/a&gt; when you need to throw ball into basket.&lt;/p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/sfV0UrOet8M&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h3 id=&quot;architecture&quot;&gt;Architecture&lt;/h3&gt;
+
+&lt;h2 id=&quot;preparing-and-screencasting&quot;&gt;Preparing and screencasting&lt;/h2&gt;
+
+&lt;p&gt;Firstly we need to download and install android emulator, I prefer &lt;a href=&quot;https://www.genymotion.com/&quot;&gt;Genymotion&lt;/a&gt; it avaible for &lt;a href=&quot;https://www.genymotion.com/fun-zone/&quot;&gt;free&lt;/a&gt; for personal use only. After installation you need to add new device with android version higher than 5.0, because we will use &lt;a href=&quot;https://developer.android.com/reference/android/media/projection/package-summary.html&quot;&gt;android.media.projection API&lt;/a&gt; for screen cast. And at the end we need to start device :)
+&lt;img src=&quot;http://i.imgur.com/NIRWrh8.png&quot; alt=&quot;genymotion&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;emulate-click-on-screen&quot;&gt;Emulate click on screen&lt;/h2&gt;
+&lt;p&gt;Android have a lot of great tools, and one of tool which allow you to perform actions on &lt;strong&gt;Monkey&lt;/strong&gt; device is &lt;a href=&quot;https://developer.android.com/studio/test/monkeyrunner/index.html&quot;&gt;monkeyrunner&lt;/a&gt; which allow you write a program which controll android device by using API, you 
+can write a programm by using Python. Mainly monkeyrunner designed to testing, but in our case it’s really good match!&lt;/p&gt;
+
+&lt;h3 id=&quot;game-installation&quot;&gt;Game installation&lt;/h3&gt;
+&lt;p&gt;Firstly you need to install game, I download game from this &lt;a href=&quot;http://play.mob.org/game/bouncy_hoops.html&quot;&gt;resource&lt;/a&gt; but you can download it from &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.noodlecake.bouncyhoops&amp;amp;hl=en&quot;&gt;google play&lt;/a&gt;, drag and drop in my emulator and enjoy the game.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/pHrAg6v.png&quot; alt=&quot;Bouncy hoops&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;monkeyscript&quot;&gt;Monkeyscript&lt;/h3&gt;
+
+&lt;p&gt;Simple mokney script which open app and perform click every 1.5 sec will look like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Imports the monkeyrunner modules used by this program
+from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+
+# Connects to the current device, returning a MonkeyDevice object
+device = MonkeyRunner.waitForConnection()
+
+# sets a variable with the package's internal name
+package = 'com.noodlecake.bouncyhoops'
+
+# sets a variable with the name of an Activity in the package
+activity = 'com.unity3d.player.UnityPlayerProxyActivity'
+
+# sets the name of the component to start
+#runComponent = package + '/' + activity
+
+# Runs the component
+device.startActivity(component=runComponent)
+
+# Presses the Menu button
+device.press('KEYCODE_MENU', MonkeyDevice.DOWN_AND_UP)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;package&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;activity&lt;/code&gt; I found in &lt;code class=&quot;highlighter-rouge&quot;&gt;AndroidManifest.xml&lt;/code&gt; file inside &lt;code class=&quot;highlighter-rouge&quot;&gt;.apk&lt;/code&gt; file. It’s really easy to analyze apk only use AndroidStudio, you need to &lt;code class=&quot;highlighter-rouge&quot;&gt;Build -&amp;gt; Analyze APK -&amp;gt; Select booncy_hoops.apk -&amp;gt; Open AndroidManifest.xml&lt;/code&gt;. Here I need a package name(or you can find package name in GooglePlay) and Default launcher activity.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/SQ44AHq.png&quot; alt=&quot;package name&quot; /&gt;
+&lt;img src=&quot;http://i.imgur.com/7JLZFfv.png&quot; alt=&quot;Default launcher activity&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+device = MonkeyRunner.waitForConnection()
+
+# sets a variable with the package's internal name
+package = 'com.noodlecake.bouncyhoops'
+
+# sets a variable with the name of an Activity in the package
+activity = 'com.unity3d.player.UnityPlayerProxyActivity'
+
+# sets the name of the component to start
+runComponent = package + '/' + activity
+
+# Runs the component
+device.startActivity(component=runComponent)
+
+device_w = int(device.getProperty(&quot;display.width&quot;))
+device_h = int(device.getProperty(&quot;display.height&quot;))
+while True:
+    MonkeyRunner.sleep(1.5)
+    #Click on center
+    device.touch(device_w/2,device_h/2, MonkeyDevice.DOWN_AND_UP)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Perform touch on screen every 1.5 sec, file &lt;strong&gt;&lt;em&gt;monkey.py&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;running-script&quot;&gt;Running script&lt;/h4&gt;
+&lt;p&gt;To run script you need to find &lt;code class=&quot;highlighter-rouge&quot;&gt;monkeyrunner&lt;/code&gt; bin file. I found it in Android SDK location, i.e. &lt;code class=&quot;highlighter-rouge&quot;&gt;/Users/%username%/Library/Android/sdk/tools/bin&lt;/code&gt;. And after running our script &lt;code class=&quot;highlighter-rouge&quot;&gt;monkeyrunner monkey.py&lt;/code&gt; ball jumping every 1.5 sec, as we expected.&lt;/p&gt;
+
+&lt;h3 id=&quot;capturing-script&quot;&gt;Capturing script&lt;/h3&gt;
+&lt;p&gt;For capturing we will use a monkeyscript too, but at first we need to &lt;strong&gt;Decrease screen resolution&lt;/strong&gt; in genymotion, cause we need to take a screenshot with the mininal delays.I select 480x640 and it works great.
+&lt;img src=&quot;http://i.imgur.com/75dBL1J.png&quot; alt=&quot;Configuration genymotion&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;troubles&quot;&gt;Troubles&lt;/h3&gt;
+&lt;p&gt;But unfortunatly I have an issues with importing modules such as OpenCV, so I decide use really great library &lt;a href=&quot;https://github.com/dtmilano/AndroidViewClient/&quot;&gt;AndroidViewClient&lt;/a&gt;, this library is not extension on monkeyrunner it’s standalon &lt;strong&gt;python&lt;/strong&gt; library.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Also&lt;/strong&gt; you need to install  &lt;code class=&quot;highlighter-rouge&quot;&gt;opencv&lt;/code&gt; library, you can use this &lt;a href=&quot;http://www.pyimagesearch.com/2015/06/22/install-opencv-3-0-and-python-2-7-on-ubuntu/&quot;&gt;resource&lt;/a&gt; to install opencv.&lt;/p&gt;
+
+&lt;p&gt;The same code but by using &lt;a href=&quot;https://github.com/dtmilano/AndroidViewClient/&quot;&gt;AndroidViewClient&lt;/a&gt; library.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import sys
+sys.path.append(&quot;/usr/local/lib/python2.7/site-packages/&quot;)
+import cv2
+import numpy as np
+from com.dtmilano.android.viewclient import ViewClient
+
+device, serialno = ViewClient.connectToDeviceOrExit(verbose=True)
+
+while True:
+    im = device.takeSnapshot() #BGR
+    im_arr = np.asarray(im) 
+    
+    im_arr = cv2.cvtColor(im_arr, cv2.COLOR_BGR2RGB) #rotate channels, BGR -&amp;gt; RGB
+
+    cv2.imshow('image',im_arr)
+    cv2.imwrite('a.png',im_arr)
+
+    device.touch(300,300)
+    cv2.waitKey(300)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Take screenshot, show current frame, emulate touch and wait 300ms&lt;/em&gt;&lt;/strong&gt;
+&lt;img src=&quot;http://i.imgur.com/EmXvBEy.png&quot; alt=&quot;Casting image from phone&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;computer-vision&quot;&gt;Computer Vision&lt;/h2&gt;
+&lt;p&gt;Before build AI we need to extract data, such as:
+	* Ball position
+	* Trash position&lt;/p&gt;
+
+&lt;p&gt;Fistly wee need add blur and convert image from RGB to HSV.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;blur = cv2.blur(im_arr, (5, 5))
+hsv = cv2.cvtColor(im_arr, cv2.COLOR_RGB2HSV)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;HSV(Hue, Saturation,Value) contains more usefull data than RGB. We can define constrains for &lt;strong&gt;Value&lt;/strong&gt;, it need to be in range [0.75…1], where 1 is maximum value, if &lt;strong&gt;Value&lt;/strong&gt; is 0 this color is black. We can do the same trick with &lt;strong&gt;Saturation&lt;/strong&gt; and &lt;strong&gt;Value&lt;/strong&gt;.
+&lt;img src=&quot;https://i.stack.imgur.com/mkq1P.png&quot; alt=&quot;HSV&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ranges = {
+    &quot;ball&quot; : {
+        &quot;begin&quot; : [0, 180, 50],
+        &quot;end&quot;:[25, 220, 255]        
+        }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Here we define lower and upper HSV color bound for ball object. The next step is filter colors, allow colors only in bound, function &lt;code class=&quot;highlighter-rouge&quot;&gt;cv2.inRange&lt;/code&gt; returns mask, where value of matrix equal 1, if this pixel from original matrix is between bounds, otherwise 0.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;lower_hsv_bound = np.array(range['begin'])
+upper_hsv_bound = np.array(range['end'])
+mask = cv2.inRange(hsv, lower_hsv_bound, upper_hsv_bound)
+
+cv2.imshow('mask', mask)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Filtering colors&lt;/em&gt;&lt;/strong&gt;
+&lt;img src=&quot;http://i.imgur.com/0CEd1TW.png&quot; alt=&quot;Mask&quot; /&gt;
+&lt;strong&gt;&lt;em&gt;mask window show current matrix, white color indicate color which in bound&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;As we can see on image abowe, matrix contains false positive objects, like orange jacket, we can easely filter it. For example we can get only bigest countour or find circles in current image. In current case I prefer find biggest contour. Also we need to define minimum width and minimum height, we can this constrains to our &lt;code class=&quot;highlighter-rouge&quot;&gt;ranges&lt;/code&gt; objest.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ranges = {
+    &quot;ball&quot; : {
+        &quot;begin&quot; : [0, 180, 50],
+        &quot;end&quot;:[25, 220, 255],
+        &quot;min_w&quot;: 10,
+        &quot;min_h&quot;:10
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;ranges object which contains hsv constrains and minimum width and height for contour&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we can define function which:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Filter colors&lt;/li&gt;
+  &lt;li&gt;Find bigest contour&lt;/li&gt;
+  &lt;li&gt;Return bigest contour if that width or height biggest than constrains&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def positionFromHsvRange(hsv_im, range):
+    lower_hsv_bound = np.array(range['begin'])
+    upper_hsv_bound = np.array(range['end'])
+    mask = cv2.inRange(hsv, lower_hsv_bound, upper_hsv_bound)
+
+    cv2.imshow('mask', mask)
+
+    mage, contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE,
+                                                 cv2.CHAIN_APPROX_NONE)
+    areaArray = []
+    for i, c in enumerate(contours):
+        area = cv2.contourArea(c)
+        areaArray.append(area)
+    sorteddata = sorted(zip(areaArray, contours), key=lambda x: x[0], reverse=True)
+    largest = sorteddata[0][1]
+    x, y, w, h = cv2.boundingRect(largest)
+    if w &amp;lt; range['min_w'] or h &amp;lt; range['min_h']:
+        return None,None,None,None
+
+    return x,y,w,h
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Function which searching for object by using HSV constrains&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we can invoke code.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;x,y,w,h  = positionFromHsvRange(hsv,ranges['ball'])
+
+if x is not None:
+    cv2.rectangle(im_arr, (x, y), (x + w, y + h), (0, 255, 0), 2)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/zymoSrl.png&quot; alt=&quot;Finding objects&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Intro With the rapig growth of machine learning learning PC to do some actions become more easely. You cat take a look at OpenAI</summary></entry><entry><title type="html">Simple C/C++ computer cluster</title><link href="/cpp/2017/06/01/simple-cc97-computation-cluster.html" rel="alternate" type="text/html" title="Simple C/C++ computer cluster" /><published>2017-06-01T00:00:00+03:00</published><updated>2017-06-01T00:00:00+03:00</updated><id>/cpp/2017/06/01/simple-cc97-computation-cluster</id><content type="html" xml:base="/cpp/2017/06/01/simple-cc97-computation-cluster.html">&lt;h4 id=&quot;computer-cluster&quot;&gt;Computer cluster&lt;/h4&gt;
 &lt;p&gt;&lt;img src=&quot;https://qph.ec.quoracdn.net/main-qimg-f78e88e58d74f6a67092381fc56b6baa-c&quot; alt=&quot;Computer cluster&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;A &lt;a href=&quot;https://en.wikipedia.org/wiki/Computer_cluster&quot;&gt; Computer cluster&lt;/a&gt; is set of computers(nodes) which working together, it can be interpreted as single system where each computer is processor. All of computers working on the same task and this bunch of computers connected in one network. One node can share data to another node, and master node can share data to slave nodes.&lt;/p&gt;
