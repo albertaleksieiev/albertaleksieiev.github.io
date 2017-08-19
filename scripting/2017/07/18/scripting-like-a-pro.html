@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Scripting like a pro</title>
+  <meta name="description" content="Scripting Scripting is a programming language which does not need in a compilation, they interpreted. Scripting using almost everywhere such as web pages, th...">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="/scripting/2017/07/18/scripting-like-a-pro.html">
+  <link rel="alternate" type="application/rss+xml" title="Albert blog" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Albert blog</a>
+
+    <nav class="site-nav">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+          <a class="page-link" href="/zpy">ZPy</a>
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Scripting like a pro</h1>
+    <p class="post-meta"><time datetime="2017-07-18T00:00:00+03:00" itemprop="datePublished">Jul 18, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h3 id="scripting">Scripting</h3>
+<p>Scripting is a programming language which does not need in a compilation, they interpreted. Scripting using almost everywhere such as web pages, the shell of operating systems, software applications, games. It’s really common to use javascript for handling user click on the button.</p>
+
+<p>Currently, we have a bunch of scripting languages such as javascript, python, Perl, shell script and many others. JavaScript basically used in programming web pages, Python for building a wide range of scripts, bash shell script for building script for OS(file manipulation, program execution).</p>
+
+<h3 id="problem">Problem</h3>
+<p>Sometimes one technology does not have some features like in other technologies. For example, bash shell script does not have default features for JSON manipulation, when other technologies like JavaScript have this features by default. And it looks natural when we use technologies for the intended purpose and combine multiple technologies.</p>
+
+<p>Also, we all are human, and we have a memory, and our memory can miss some information, for example, create a file in JS, but we clearly know how to create a file by using a bash <code class="highlighter-rouge">touch</code>.</p>
+
+<p>For example, we are a JS developer, and we know how to use map/reduce/filter function, but we do not know how to make it through the bash. Firstly we start googling how to use map function in bash, instead of use JavaScript in a terminal. If you select a Zpy you can combine multiple script languages in 1 command line shell.</p>
+
+<h3 id="what-is-zpy">What is Zpy?</h3>
+<p>Zpy is command line shell where you can use not only 1 language but combine multiple languages and send data between them. You can create an HTTP request by using wget, parse data by using a Python language and preprocess data by using JavaScript.</p>
+
+<h4 id="hello-world">Hello world</h4>
+<p>Let’s start with something really simple, for example just printing “Hello world” and make some arithmetical operations.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) "Hello world"
+Hello world
+(Zpy) 4 + 7
+11
+(Zpy) (5 + 3 * 8)/5
+5.8
+</code></pre>
+</div>
+<p>By default Zpy, use a Python language. But we can use bash language if we will add symbol ` at begin or <code class="highlighter-rouge">j</code> if we want to use a JavaScript. 
+For import module in Python, we need to add symbol <code class="highlighter-rouge">~</code>  at begin which indicate a Python language.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) ~import math, random
+(Zpy) math.sin(math.e * random.random())
+0.7826813558152167
+(Zpy) math.sin(math.e * random.random())
+0.4710093839817176
+</code></pre>
+</div>
+
+<p>For importing module to javascript, we need use <code class="highlighter-rouge">require</code> keyword, and install the package globally by using <code class="highlighter-rouge">npm</code>.</p>
+
+<h4 id="creation-files-with-random-names">Creation files with random names</h4>
+<p>Let’s imagine about the real task - <strong>Create 5 empty files with random names</strong>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) j new Array(5)
+	|j z.map((e)=&gt;Math.random())
+	|j z.join(" ")
+	| touch $z
+(Zpy) ls
+0.04070692726231173	0.604588968489302
+0.51512968378711	0.9823757457193931
+0.5302334711282355
+</code></pre>
+</div>
+
+<p>Here we use a pipe symbol <code class="highlighter-rouge">|</code> for interacting between languages. Symboj <code class="highlighter-rouge">j</code> means that we use an <em>JavaScript language</em>, for bash language we use a <strong>`</strong> symbol, and Python language using by default.</p>
+
+<p>Symbol <code class="highlighter-rouge">z</code> is an input argument which will be sent from the previous block by pipeline, in the second block we receive an empty array of 5 which will be sent from the first block into variable <code class="highlighter-rouge">z</code>.</p>
+
+<p>Here we have an 4 blocks:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">j new Array(5)</code> - creating an empty array of size 5</li>
+  <li><code class="highlighter-rouge">j z.map((e)=&gt;Math.random())</code> - here we receiving empty array, and use map function for generate array of random numbers.</li>
+  <li><code class="highlighter-rouge">j z.join(" ")</code> - joining array of random digits by using ` ` symbol.</li>
+  <li><code class="highlighter-rouge">touch $z</code> - creating files when filenames is an random numbers from previous block.</li>
+</ul>
+
+<p>As we can see, this task will be an easily solved, if we will use a Zpy.</p>
+
+<h4 id="simple-http-static-server">Simple http static server</h4>
+<p>Let’s try to create a simple static server by using <a href="https://github.com/senchalabs/connect">connect</a> library. On the first step, we installed globally <code class="highlighter-rouge">connect</code> package and <code class="highlighter-rouge">serve-static</code> package. After that, we import these modules, and also import random module to python. And at the end, we create a random folder in <code class="highlighter-rouge">/tmp</code> folder, fill index.html file and run the static server on 8081 port.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) ` npm i connect serve-static -G
+(Zpy) j connect = require('connect')
+Added new requirements : { [['connect', 'connect']] }
+(Zpy) j serveStatic = require('serve-static')
+Added new requirements : { [['serveStatic', 'serve-static']] }
+(Zpy) ~import random
+(Zpy) random.random()  # Generate random number
+	| "/tmp/server_%s" % z  # Generate string
+	|` mkdir $z; echo $z  # Create server folder and echo location
+	| "%s/index.html" % z.strip() # Generate filename string
+	| echo "Hello world from index.html which located at ${z}" &gt; $z; echo $z # Fill index.html and return location of file
+	| j connect().use(serveStatic(  require('path').dirname(z)) ).listen(8081) #Create static server
+</code></pre>
+</div>
+<p><img src="http://i.imgur.com/A2C1aNq.png" alt="static server" />
+If you look at the third line, we create a folder and print variable <code class="highlighter-rouge">mkdir $z; echo $z</code>, if we want to send the value to the next block, we need to return value which will be sent to the next block.</p>
+
+<h4 id="http-request">Http request</h4>
+
+<p>Let’s try to do something more complicated, like a http request. Here we can use <a href="https://www.gnu.org/software/wget/">wget</a> or <a href="https://curl.haxx.se/">curl</a>, but what we should do if we need extract some data from http response and this response was be encoded in JSON for example?</p>
+
+<p>The first link in google says we can use a JSON preprocessor <a href="https://stedolan.github.io/jq/">jq</a>.
+After installing on OSX and run some simple request, it works great, but if we need to do something complicated, we should read a documentation how to use this library, instead of using familiar languages like Python or JS for solving this task.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&gt; brew install jq
+&gt; curl -s 'https://api.github.com/users/lambda' | jq -r '.name'
+Brian Campbell
+</code></pre>
+</div>
+<p><strong>Json preprocessor jq</strong></p>
+
+<p>Here we can use a Zpy for the solve this simple task, I will use a JavaScript <code class="highlighter-rouge">JSON.parse</code> function and Python for preprocessing data.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) `curl -s 'https://api.github.com/users/lambda' |j JSON.parse(z).name
+Brian Campbell
+(Zpy) `curl -s 'https://api.github.com/users/lambda' |j JSON.par
+se(z)| "%s - %s" % (z['type'], z['name'])
+User - Brian Campbell
+</code></pre>
+</div>
+<p><em>Using Zpy for preprocess json request</em></p>
+
+<p>And for sure we can send this data as http request, to <a href="https://requestb.in">requestb.in</a>. <strong>Note: Firstly you need to create an endpoint on requestb.in, just visit this service and create</strong></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>` curl -s 'https://api.github.com/users/lambda' 
+	|j JSON.parse(z)| "%s - %s" % (z['type'], z['name']) 
+	|` curl -d "data=$z" -X POST https://requestb.in/1gpnzpl1
+</code></pre>
+</div>
+<p><em>Sending response data from github api to requestb.in as http request</em></p>
+
+<h4 id="chain-pool-for-function">Chain pool <code class="highlighter-rouge">[for]</code> function</h4>
+<p><code class="highlighter-rouge">[for]</code> function is a really useful in Zpy. <code class="highlighter-rouge">[for]</code> function iterate through every item in array or data split by <code class="highlighter-rouge">\n</code> character as stdin and evaluate every iterated item by any available other languages in Zpy such as JS, Python or bash.</p>
+
+<p>For example, we need to list a directory of multiple folders. It’s really easy to do this by using <code class="highlighter-rouge">[for]</code> function.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) ['folder1', 'folder2'] 
+	| [for] ls $z 
+subfolder1_1	subfolder1_2
+subfolder2_1	subfolder2_2	subfolder2_3	subfolder2_test
+</code></pre>
+</div>
+
+<p><img src="https://raw.githubusercontent.com/albertaleksieiev/zpy/content/img/Chain%20Pool%20%5Bfor%5D%20function.jpg" alt="for function" /></p>
+
+<p>You can read more about chain pool functions <a href="http://albert.guru/zpy/#chain-pool">here</a>.</p>
+<h4 id="javascript-async">Javascript async</h4>
+
+<p>It, not a secret that async function is the main part of javascript, for example, async Programming uses in the heart of Node.js - event loop. In Zpy we can convert async function to not async, simply just call a callback function <code class="highlighter-rouge">sync</code>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) j setTimeout(() =&gt; sync(13), 1100)
+13
+</code></pre>
+</div>
+<p><em>Return result from async function</em></p>
+
+<p>Let’s try to retrieve posts from REST API endpoint, we just need to change post id in HTTP query, for example on this endpoint <code class="highlighter-rouge">https://jsonplaceholder.typicode.com/posts?id=1</code>, here need to use chain pool function <code class="highlighter-rouge">for</code> for create multiple http requests.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(Zpy) list(range(1,10)) 
+	|[for] j request('https://jsonplaceholder.typicode.com/posts?id='+z, (err, res, body) =&gt; sync(JSON.parse(body)[0].title) )
+['sunt aut facere repellat provident occaecati excepturi optio reprehenderit', 'qui est esse', 'ea molestias quasi exercitationem repellat qui ipsa sit aut', 'eum et est occaecati', 'nesciunt quas odio', 'dolorem eum magni eos aperiam quia', 'magnam facilis autem', 'dolorem dolore est ipsam', 'nesciunt iure omnis dolorem tempora et accusantium']
+</code></pre>
+</div>
+<p><em>Send multiple http requests</em></p>
+
+<p>Here we generate an array of ids by Python, after that, we use <code class="highlighter-rouge">[for]</code> keyword for creating multiple http requests. This requests moved into the queue, and Zpy evaluates each of task in a single thread.</p>
+
+<h3 id="examples-from-real-life">Examples from real life</h3>
+
+<h4 id="simple-zpy-script-for-moving-screenshots-from-desktop-to-another-folder">Simple Zpy script for moving screenshots from desktop to another folder.</h4>
+<p>By default, if you create a screenshot on OSX, it will be saved in the desktop folder, let’s try to create a script which moves all screenshots from desktop to another folder.</p>
+
+<p>You can write zpy scripts on file, and run then by send location of file into zpy program as input argument.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&gt; echo "j new Array(5)|j z.map((e)=&gt;Math.random())"&gt; script.zpy
+&gt; cat script.zpy
+&gt; j new Array(5)|j z.map((e)=&gt;Math.random())
+&gt; zpy script.zpy
+[0.889856010190299, 0.02441660903336995, 0.23200594971405852, 0.47496638325725793, 0.5552667771238191]
+</code></pre>
+</div>
+<p><em><code class="highlighter-rouge">script.zpy</code> - a simple zpy script</em></p>
+
+<p>Let’s write a simple script which moves all files which contain “Screen Shot” in the filename, to the screenshot folder.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#!/Library/Frameworks/Python.framework/Versions/3.5/bin/zpy
+ls ~/Desktop 
+	| grep "Screen Shot" 
+	| z.split("\n")
+	|j z.filter(e =&gt; e.length &gt; 0).map(e =&gt; "/Users/albert/Desktop/" + e) 
+	|[for] mv "${z}" ~/Desktop/screenshot
+</code></pre>
+</div>
+<p><em>desktop.zpy script, which move screenshot from desktop to another folder</em></p>
+
+<p>After that we can easely add this script to crontab.</p>
+
+<h3 id="ticket-buying-problem">Ticket buying problem</h3>
+
+<p>Once I need to buy ticket, but ticket platform doesnt have available tickets, so I need to monitor website by continuously reloading the page. After 5 minute I decide automatize this task by using Zpy. I spend 5 minutes to write script and bought a ticket in 1 hour.</p>
+
+<p>The first step I discover an HTTP request which sended to platform API. API endpoint returned an object where field <code class="highlighter-rouge">value</code> is an array of available trains. I was looking for new avaible trains so I need to be notified when new train tickets is to be avaible. 
+I need to finish selected steps to create a simple notification system for ticket buying:</p>
+
+<ul>
+  <li>Create HTTP request</li>
+  <li>Parse JSON</li>
+  <li>Notify by using a beep sound if number of available trains greater that currenty available, in my case is 1.</li>
+</ul>
+
+<p>For creating an HTTP request I need just right-click on request and copy request as cURL. For parsing json, I will use a JS and for sending the notification just print <code class="highlighter-rouge">\a</code> symbol.</p>
+
+<p><img src="http://i.imgur.com/Y4iqbYo.png" alt="ticket request" />
+<em>Copy HTTP request as cURL</em></p>
+
+<p>Final script will look like:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#!/Library/Frameworks/Python.framework/Versions/3.5/bin/zpy
+` curl 'http://booking.uz.gov.ua/en/purchase/search/' -H 'GV-Ajax: 1' -H 'Origin: http://booking.uz.gov.ua' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.8,ru;q=0.6,uk;q=0.4' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36' -H 'Content-Type: application/x-www-form-urlencoded' -H 'Accept: */*' -H 'Referer: http://booking.uz.gov.ua/en/' -H 'Cookie:  HTTPSERVERID=server2; _gv_sessid=ifrpd9gnvrsmc90k8k99tihh32; _ga=GA1.3.1694846096.1499675049; _gid=GA1.3.200677417.1502873273; _gat=1; _gv_lang=en' -H 'Connection: keep-alive' -H 'GV-Screen: 1440x900' -H 'GV-Referer: http://booking.uz.gov.ua/en/' --data 'station_id_from=2204001&amp;station_id_till=2208001&amp;station_from=Kharkiv&amp;station_till=Odesa&amp;date_dep=08.31.2017&amp;time_dep=00%3A00&amp;time_dep_till=&amp;another_ec=0&amp;search=' --compressed
+	|j JSON.parse(z).value 
+	| print("\a" * 20) if len(z) &gt; 1 else print("no")
+</code></pre>
+</div>
+<p><em>ticket.zpy</em></p>
+
+<p>But this script will be evaluated just once, so we need to write a simple program which will run this script multiple times in loop with random delays, I used a Python.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>import random, time
+from subprocess import call
+while(True):
+	time.sleep(5 + random.randint(0,10))
+	call(['zpy','ticket.zpy'])
+</code></pre>
+</div>
+<p><em>Simple python script which run our Zpy script for ticket availability</em></p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Albert blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Albert blog
+            
+            </li>
+            
+            <li><a href="mailto:albert.aleksieiev@gmail.com">albert.aleksieiev@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/albertaleksieiev"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">albertaleksieiev</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/albert_keyj"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">albert_keyj</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
