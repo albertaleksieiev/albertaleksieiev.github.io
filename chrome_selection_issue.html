@@ -5,10 +5,18 @@
     <title>Selection Remove All Range</title>
 </head>
 <body>
-<textarea id="w3review" name="w3review" rows="4" cols="50">
+<textarea id="textArea" rows="4" cols="50">
 Chrome 85, 85 hides keybord, when you call `document.getSelection().removeAllRanges()`, press on da button below.
 </textarea>
-
+<br/>
 <button onclick="document.getSelection().removeAllRanges()">document.getSelection().removeAllRanges()</button>
+<br/>
+<br/>
+<span id="userAgent"></span>
 </body>
+
+<script>
+    document.getElementById("userAgent").innerText = navigator.userAgent;
+    document.getElementById("textArea").focus()
+</script>
 </html>
