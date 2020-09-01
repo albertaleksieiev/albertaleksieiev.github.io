@@ -5,17 +5,23 @@
     <title>Selection Remove All Range</title>
 </head>
 <body>
-<textarea id="textArea" rows="4" cols="50">
-Chrome 85, 85 hides keybord, when you call `document.getSelection().removeAllRanges()`, press on da button below.
-</textarea>
+<div id="target" contenteditable="true"><p>Some text goes here!</p><p>Moar text!</p></div>
 <br/>
-<button onclick="document.getSelection().removeAllRanges()">document.getSelection().removeAllRanges()</button>
+<button onclick="select()">document.getSelection().removeAllRanges()</button>
 <br/>
 <br/>
 <span id="userAgent"></span>
 </body>
 
 <script>
+    function select() {
+        var node = document.getElementById("target")
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
     document.getElementById("userAgent").innerText = navigator.userAgent;
     document.getElementById("textArea").focus()
 </script>
